@@ -4,7 +4,7 @@
 #include <variant>
 #include <vector>
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result SAdd(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
@@ -45,7 +45,7 @@ Result SAdd(DataBase<Storage>& data_base, const std::vector<std::string>& argume
     });
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result SRem(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
@@ -74,7 +74,7 @@ Result SRem(DataBase<Storage>& data_base, const std::vector<std::string>& argume
     });
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result SIsMember(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
@@ -96,7 +96,7 @@ Result SIsMember(DataBase<Storage>& data_base, const std::vector<std::string>& a
     return IntegerResult(set_value->Contains(member) ? 1 : 0);
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result SMembers(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -116,7 +116,7 @@ Result SMembers(DataBase<Storage>& data_base, const std::vector<std::string>& ar
     return ListResult(set_value->GetAll());
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result SCard(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -136,7 +136,7 @@ Result SCard(DataBase<Storage>& data_base, const std::vector<std::string>& argum
     return IntegerResult(set_value->Size());
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result SUnion(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -163,7 +163,7 @@ Result SUnion(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return ListResult(result.GetAll());
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result SInter(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -202,7 +202,7 @@ Result SInter(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return ListResult(result.GetAll());
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result SDiff(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -241,7 +241,7 @@ Result SDiff(DataBase<Storage>& data_base, const std::vector<std::string>& argum
     return ListResult(result.GetAll());
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result SMove(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 4)) {
         return ErrorResult("wrong number of arguments");

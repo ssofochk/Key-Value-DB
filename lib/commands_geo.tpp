@@ -275,7 +275,7 @@ inline void PrepareGeoSearchResult(std::vector<GeoSearchValue>& result,
     }
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result GeoAdd(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (arguments.size() < 5 || arguments.size() % 3 != 2) {
         return ErrorResult{"wrong number of arguments"};
@@ -338,7 +338,7 @@ Result GeoAdd(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     });
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result GeoPos(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult{"wrong number of arguments"};
@@ -375,7 +375,7 @@ Result GeoPos(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return result;
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result GeoDist(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!(CheckEqualArguments(arguments, 4) || CheckEqualArguments(arguments, 5))) {
         return ErrorResult{"wrong number of arguments"};
@@ -411,7 +411,7 @@ Result GeoDist(DataBase<Storage>& data_base, const std::vector<std::string>& arg
     return StringResult{FormatDouble(distance)};
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result GeoSearch(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 6)) {
         return ErrorResult{"wrong number of arguments"};
@@ -453,7 +453,7 @@ Result GeoSearch(DataBase<Storage>& data_base, const std::vector<std::string>& a
     return result;
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result GeoSearchStore(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 7)) {
         return ErrorResult{"wrong number of arguments"};

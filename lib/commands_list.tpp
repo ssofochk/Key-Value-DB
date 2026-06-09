@@ -5,7 +5,7 @@
 #include <variant>
 #include <vector>
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result LPush(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
@@ -46,7 +46,7 @@ Result LPush(DataBase<Storage>& data_base, const std::vector<std::string>& argum
     });
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result RPush(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
@@ -87,7 +87,7 @@ Result RPush(DataBase<Storage>& data_base, const std::vector<std::string>& argum
     });
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result LPop(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!(CheckEqualArguments(arguments, 3) || CheckEqualArguments(arguments, 2))) {
         return ErrorResult("wrong number of arguments");
@@ -143,7 +143,7 @@ Result LPop(DataBase<Storage>& data_base, const std::vector<std::string>& argume
     });
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result RPop(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!(CheckEqualArguments(arguments, 3) || CheckEqualArguments(arguments, 2))) {
         return ErrorResult("wrong number of arguments");
@@ -199,7 +199,7 @@ Result RPop(DataBase<Storage>& data_base, const std::vector<std::string>& argume
     });
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result LLen(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -226,7 +226,7 @@ void NormalizeIndex(int& index, const std::size_t size) {
     }
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result LRange(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 4)) {
         return ErrorResult("wrong number of arguments");
@@ -287,7 +287,7 @@ Result LRange(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return ListResult(ans);
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result LIndex(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
@@ -326,7 +326,7 @@ Result LIndex(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return StringResult((*list_value)[index]);
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result LSet(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 4)) {
         return ErrorResult("wrong number of arguments");
@@ -367,7 +367,7 @@ Result LSet(DataBase<Storage>& data_base, const std::vector<std::string>& argume
     });
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result LInsert(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 5)) {
         return ErrorResult("wrong number of arguments");

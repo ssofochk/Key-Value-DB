@@ -10,6 +10,7 @@
 #include <variant>
 #include <vector>
 
+#include "storage_types.hpp"
 #include "string_element.hpp"
 #include "list_element.hpp"
 #include "set_element.hpp"
@@ -18,15 +19,7 @@
 
 #include "commands.hpp"
 
-using DataBaseStoredTypes = std::variant<StringElement, ListElement, SetElement, GeoElement>;
-using DeathTime = std::chrono::steady_clock::time_point;
-
-struct DataBaseElement {
-    DataBaseStoredTypes value_;
-    std::optional<DeathTime> death_time_;
-};
-
-template <class Storage = std::unordered_map<std::string, DataBaseElement>>
+template <DataBaseStorage Storage = DefaultStorage>
 class DataBase {
 public:
     using Variant = DataBaseStoredTypes;

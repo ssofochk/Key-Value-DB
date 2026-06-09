@@ -2,7 +2,7 @@
 #include <variant>
 #include <vector>
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Set(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
@@ -11,7 +11,7 @@ Result Set(DataBase<Storage>& data_base, const std::vector<std::string>& argumen
     return data_base.PutElement(arguments[1], StringElement(arguments[2]));
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Get(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -32,7 +32,7 @@ Result Get(DataBase<Storage>& data_base, const std::vector<std::string>& argumen
     return StringResult(element->Get());
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result StrLen(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -53,7 +53,7 @@ Result StrLen(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return IntegerResult(element->Size());
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Append(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");

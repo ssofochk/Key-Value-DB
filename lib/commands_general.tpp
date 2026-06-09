@@ -10,7 +10,7 @@
 #include <variant>
 #include <vector>
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Type(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -42,7 +42,7 @@ Result Type(DataBase<Storage>& data_base, const std::vector<std::string>& argume
     return StringResult("none");
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Del(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -59,7 +59,7 @@ Result Del(DataBase<Storage>& data_base, const std::vector<std::string>& argumen
     return IntegerResult(removed);
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Exists(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -107,7 +107,7 @@ inline bool IsMatch(const std::string& text, const std::string& pattern) {
     return TryMatch(text, pattern, 0, 0);
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Keys(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -125,7 +125,7 @@ Result Keys(DataBase<Storage>& data_base, const std::vector<std::string>& argume
     return result;
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result FlushDB(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 1)) {
         return ErrorResult("wrong number of arguments");
@@ -135,7 +135,7 @@ Result FlushDB(DataBase<Storage>& data_base, const std::vector<std::string>& arg
     return OkResult{};
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result DBSize(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 1)) {
         return ErrorResult("wrong number of arguments");
@@ -144,7 +144,7 @@ Result DBSize(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return IntegerResult(data_base.Size());
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Config(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
@@ -197,7 +197,7 @@ Result Config(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return ErrorResult("syntax error");
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Memory(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
@@ -216,7 +216,7 @@ Result Memory(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return IntegerResult(data_base.MemoryStored(arguments[2]));
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result Expire(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
@@ -235,7 +235,7 @@ Result Expire(DataBase<Storage>& data_base, const std::vector<std::string>& argu
     return IntegerResult(data_base.SetTTL(arguments[1], seconds) ? 1 : 0);
 }
 
-template <class Storage>
+template <DataBaseStorage Storage>
 Result TTL(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
