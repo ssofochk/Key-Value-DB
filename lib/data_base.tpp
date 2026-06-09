@@ -1,7 +1,3 @@
-#include "data_base.hpp"
-#include "commands.hpp"
-#include "result_types.hpp"
-
 #include <chrono>
 #include <cctype>
 #include <cstddef>
@@ -13,56 +9,59 @@
 #include <variant>
 #include <vector>
 
-DataBase::DataBase() {
-    RegisterCommand("SET", &Set);
-    RegisterCommand("GET", &Get);
-    RegisterCommand("STRLEN", &StrLen);
-    RegisterCommand("APPEND", &Append);
+template <DataBaseStorage Storage>
+DataBase<Storage>::DataBase() {
+    RegisterCommand("SET", &Set<Storage>);
+    RegisterCommand("GET", &Get<Storage>);
+    RegisterCommand("STRLEN", &StrLen<Storage>);
+    RegisterCommand("APPEND", &Append<Storage>);
 
-    RegisterCommand("EXPIRE", &Expire);
-    RegisterCommand("TTL", &TTL);
+    RegisterCommand("EXPIRE", &Expire<Storage>);
+    RegisterCommand("TTL", &TTL<Storage>);
 
-    RegisterCommand("LPUSH", &LPush);
-    RegisterCommand("RPUSH", &RPush);
-    RegisterCommand("LPOP", &LPop);
-    RegisterCommand("RPOP", &RPop);
-    RegisterCommand("LLEN", &LLen);
-    RegisterCommand("LRANGE", &LRange);
-    RegisterCommand("LINDEX", &LIndex);
-    RegisterCommand("LSET", &LSet);
-    RegisterCommand("LINSERT", &LInsert);
+    RegisterCommand("LPUSH", &LPush<Storage>);
+    RegisterCommand("RPUSH", &RPush<Storage>);
+    RegisterCommand("LPOP", &LPop<Storage>);
+    RegisterCommand("RPOP", &RPop<Storage>);
+    RegisterCommand("LLEN", &LLen<Storage>);
+    RegisterCommand("LRANGE", &LRange<Storage>);
+    RegisterCommand("LINDEX", &LIndex<Storage>);
+    RegisterCommand("LSET", &LSet<Storage>);
+    RegisterCommand("LINSERT", &LInsert<Storage>);
 
-    RegisterCommand("SADD", &SAdd);
-    RegisterCommand("SREM", &SRem);
-    RegisterCommand("SISMEMBER", &SIsMember);
-    RegisterCommand("SMEMBERS", &SMembers);
-    RegisterCommand("SCARD", &SCard);
-    RegisterCommand("SUNION", &SUnion);
-    RegisterCommand("SINTER", &SInter);
-    RegisterCommand("SDIFF", &SDiff);
-    RegisterCommand("SMOVE", &SMove);
+    RegisterCommand("SADD", &SAdd<Storage>);
+    RegisterCommand("SREM", &SRem<Storage>);
+    RegisterCommand("SISMEMBER", &SIsMember<Storage>);
+    RegisterCommand("SMEMBERS", &SMembers<Storage>);
+    RegisterCommand("SCARD", &SCard<Storage>);
+    RegisterCommand("SUNION", &SUnion<Storage>);
+    RegisterCommand("SINTER", &SInter<Storage>);
+    RegisterCommand("SDIFF", &SDiff<Storage>);
+    RegisterCommand("SMOVE", &SMove<Storage>);
 
-    RegisterCommand("TYPE", &Type);
-    RegisterCommand("DEL", &Del);
-    RegisterCommand("EXISTS", &Exists);
-    RegisterCommand("KEYS", &Keys);
-    RegisterCommand("FLUSHDB", &FlushDB);
-    RegisterCommand("CONFIG", &Config);
-    RegisterCommand("DBSIZE", &DBSize);
-    RegisterCommand("MEMORY", &Memory);
+    RegisterCommand("TYPE", &Type<Storage>);
+    RegisterCommand("DEL", &Del<Storage>);
+    RegisterCommand("EXISTS", &Exists<Storage>);
+    RegisterCommand("KEYS", &Keys<Storage>);
+    RegisterCommand("FLUSHDB", &FlushDB<Storage>);
+    RegisterCommand("CONFIG", &Config<Storage>);
+    RegisterCommand("DBSIZE", &DBSize<Storage>);
+    RegisterCommand("MEMORY", &Memory<Storage>);
 
-    RegisterCommand("GEOADD", &GeoAdd);
-    RegisterCommand("GEOPOS", &GeoPos);
-    RegisterCommand("GEODIST", &GeoDist);
-    RegisterCommand("GEOSEARCH", &GeoSearch);
-    RegisterCommand("GEOSEARCHSTORE", &GeoSearchStore);
+    RegisterCommand("GEOADD", &GeoAdd<Storage>);
+    RegisterCommand("GEOPOS", &GeoPos<Storage>);
+    RegisterCommand("GEODIST", &GeoDist<Storage>);
+    RegisterCommand("GEOSEARCH", &GeoSearch<Storage>);
+    RegisterCommand("GEOSEARCHSTORE", &GeoSearchStore<Storage>);
 }
 
-void DataBase::RegisterCommand(const std::string& name, Command command) {
+template <DataBaseStorage Storage>
+void DataBase<Storage>::RegisterCommand(const std::string& name, Command command) {
     commands_[Normalize(name)] = command;
 }
 
-std::vector<std::string> DataBase::ParseLine(const std::string& line) {
+template <DataBaseStorage Storage>
+std::vector<std::string> DataBase<Storage>::ParseLine(const std::string& line) {
     std::vector<std::string> arguments;
     std::string argument;
 
@@ -93,7 +92,8 @@ std::vector<std::string> DataBase::ParseLine(const std::string& line) {
     return arguments;
 }
 
-Result DataBase::Execute(const std::string& line) {
+template <DataBaseStorage Storage>
+Result DataBase<Storage>::Execute(const std::string& line) {
     std::vector<std::string> arguments = ParseLine(line);
 
     if (arguments.empty()) {
@@ -111,7 +111,8 @@ Result DataBase::Execute(const std::string& line) {
     return iterator->second(*this, arguments);
 }
 
-bool DataBase::IsDead(const Element& element) const {
+template <DataBaseStorage Storage>
+bool DataBase<Storage>::IsDead(const Element& element) const {
     if (!element.death_time_.has_value()) {
         return false;
     }
@@ -119,7 +120,8 @@ bool DataBase::IsDead(const Element& element) const {
     return std::chrono::steady_clock::now() >= *element.death_time_;
 }
 
-void DataBase::ClearDead(const std::string& key) {
+template <DataBaseStorage Storage>
+void DataBase<Storage>::ClearDead(const std::string& key) {
     auto iterator = data_.find(key);
 
     if (iterator == data_.end()) {
@@ -134,7 +136,8 @@ void DataBase::ClearDead(const std::string& key) {
     data_.erase(iterator);
 }
 
-void DataBase::ClearAllDead() {
+template <DataBaseStorage Storage>
+void DataBase<Storage>::ClearAllDead() {
     for (auto iterator = data_.begin(); iterator != data_.end();) {
         if (IsDead(iterator->second)) {
             memory_usage_ -= KeyMemoryStored(iterator->first) + MemoryStored(iterator->second);
@@ -145,7 +148,8 @@ void DataBase::ClearAllDead() {
     }
 }
 
-DataBase::Variant* DataBase::GetElement(const std::string& key) {
+template <DataBaseStorage Storage>
+typename DataBase<Storage>::Variant* DataBase<Storage>::GetElement(const std::string& key) {
     ClearDead(key);
 
     auto iterator = data_.find(key);
@@ -156,7 +160,8 @@ DataBase::Variant* DataBase::GetElement(const std::string& key) {
     return &iterator->second.value_;
 }
 
-bool DataBase::IsContain(const std::string& key) {
+template <DataBaseStorage Storage>
+bool DataBase<Storage>::IsContain(const std::string& key) {
     auto* value = GetElement(key);
 
     if (!value) {
@@ -166,7 +171,8 @@ bool DataBase::IsContain(const std::string& key) {
     return true;
 }
 
-Result DataBase::PutElement(const std::string& key, Variant value) {
+template <DataBaseStorage Storage>
+Result DataBase<Storage>::PutElement(const std::string& key, Variant value) {
     ClearDead(key);
 
     std::size_t old_memory = 0;
@@ -189,7 +195,8 @@ Result DataBase::PutElement(const std::string& key, Variant value) {
     return OkResult{};
 }
 
-Result DataBase::UpdateElement(const std::string& key,
+template <DataBaseStorage Storage>
+Result DataBase<Storage>::UpdateElement(const std::string& key,
     const std::function<Result(Variant&)>& action) {
     ClearDead(key);
 
@@ -220,7 +227,8 @@ Result DataBase::UpdateElement(const std::string& key,
     return result;
 }
 
-bool DataBase::RemoveElement(const std::string& key) {
+template <DataBaseStorage Storage>
+bool DataBase<Storage>::RemoveElement(const std::string& key) {
     ClearDead(key);
 
     auto iterator = data_.find(key);
@@ -235,17 +243,20 @@ bool DataBase::RemoveElement(const std::string& key) {
     return true;
 }
 
-void DataBase::ClearDB() {
+template <DataBaseStorage Storage>
+void DataBase<Storage>::ClearDB() {
     data_.clear();
     memory_usage_ = 0;
 }
 
-std::size_t DataBase::Size() {
+template <DataBaseStorage Storage>
+std::size_t DataBase<Storage>::Size() {
     ClearAllDead();
     return data_.size();
 }
 
-std::vector<std::string> DataBase::GetKeys() {
+template <DataBaseStorage Storage>
+std::vector<std::string> DataBase<Storage>::GetKeys() {
     ClearAllDead();
     std::vector<std::string> ans;
 
@@ -255,7 +266,8 @@ std::vector<std::string> DataBase::GetKeys() {
     return ans;
 }
 
-bool DataBase::SetTTL(const std::string& key, int seconds) {
+template <DataBaseStorage Storage>
+bool DataBase<Storage>::SetTTL(const std::string& key, int seconds) {
     ClearDead(key);
 
     auto iterator = data_.find(key);
@@ -275,7 +287,8 @@ bool DataBase::SetTTL(const std::string& key, int seconds) {
     return true;
 }
 
-int64_t DataBase::GetTTL(const std::string& key) {
+template <DataBaseStorage Storage>
+int64_t DataBase<Storage>::GetTTL(const std::string& key) {
     ClearDead(key);
 
     auto iterator = data_.find(key);
@@ -299,17 +312,20 @@ int64_t DataBase::GetTTL(const std::string& key) {
     return seconds.count();
 }
 
-std::size_t DataBase::MemoryStored(const Variant& value) const {
+template <DataBaseStorage Storage>
+std::size_t DataBase<Storage>::MemoryStored(const Variant& value) const {
     return std::visit([](const auto& element) {
         return element.MemoryStored();
     }, value);
 }
 
-std::size_t DataBase::MemoryStored(const Element& element) const {
+template <DataBaseStorage Storage>
+std::size_t DataBase<Storage>::MemoryStored(const Element& element) const {
     return MemoryStored(element.value_);
 }
 
-std::size_t DataBase::MemoryStored(const std::string& key) {
+template <DataBaseStorage Storage>
+std::size_t DataBase<Storage>::MemoryStored(const std::string& key) {
     auto* value = GetElement(key);
 
     if (!value) {
@@ -319,11 +335,13 @@ std::size_t DataBase::MemoryStored(const std::string& key) {
     return KeyMemoryStored(key) + MemoryStored(*value);
 }
 
-std::size_t DataBase::KeyMemoryStored(const std::string& key) const {
+template <DataBaseStorage Storage>
+std::size_t DataBase<Storage>::KeyMemoryStored(const std::string& key) const {
     return sizeof(std::string) + key.capacity();
 }
 
-bool DataBase::CanStore(std::size_t old_memory, std::size_t new_memory) const {
+template <DataBaseStorage Storage>
+bool DataBase<Storage>::CanStore(std::size_t old_memory, std::size_t new_memory) const {
     if (max_memory_ == 0) {
         return true;
     }
@@ -331,10 +349,12 @@ bool DataBase::CanStore(std::size_t old_memory, std::size_t new_memory) const {
     return memory_usage_ - old_memory + new_memory <= max_memory_;
 }
 
-void DataBase::SetMaxMemory(std::size_t memory_size) {
+template <DataBaseStorage Storage>
+void DataBase<Storage>::SetMaxMemory(std::size_t memory_size) {
     max_memory_ = memory_size;
 }
 
-std::size_t DataBase::GetMaxMemory() const {
+template <DataBaseStorage Storage>
+std::size_t DataBase<Storage>::GetMaxMemory() const {
     return max_memory_;
 }

@@ -1,13 +1,9 @@
-#include "commands.hpp"
-#include "data_base.hpp"
-#include "result_types.hpp"
-#include "string_element.hpp"
-
 #include <string>
 #include <variant>
 #include <vector>
 
-Result Set(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <DataBaseStorage Storage>
+Result Set(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -15,7 +11,8 @@ Result Set(DataBase& data_base, const std::vector<std::string>& arguments) {
     return data_base.PutElement(arguments[1], StringElement(arguments[2]));
 }
 
-Result Get(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <DataBaseStorage Storage>
+Result Get(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -35,7 +32,8 @@ Result Get(DataBase& data_base, const std::vector<std::string>& arguments) {
     return StringResult(element->Get());
 }
 
-Result StrLen(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <DataBaseStorage Storage>
+Result StrLen(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -55,7 +53,8 @@ Result StrLen(DataBase& data_base, const std::vector<std::string>& arguments) {
     return IntegerResult(element->Size());
 }
 
-Result Append(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <DataBaseStorage Storage>
+Result Append(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -72,7 +71,7 @@ Result Append(DataBase& data_base, const std::vector<std::string>& arguments) {
         return IntegerResult(arguments[2].size());
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& value) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* element = std::get_if<StringElement>(&value);
 
         if (!element) {
