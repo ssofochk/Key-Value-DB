@@ -1,15 +1,11 @@
-#include "commands.hpp"
-#include "data_base.hpp"
-#include "result_types.hpp"
-#include "set_element.hpp"
-
 #include <cstddef>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
-Result SAdd(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result SAdd(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -33,7 +29,7 @@ Result SAdd(DataBase& data_base, const std::vector<std::string>& arguments) {
         return IntegerResult(added);
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& value) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* set_value = std::get_if<SetElement>(&value);
         if (!set_value) {
             return WrongType();
@@ -49,7 +45,8 @@ Result SAdd(DataBase& data_base, const std::vector<std::string>& arguments) {
     });
 }
 
-Result SRem(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result SRem(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -60,7 +57,7 @@ Result SRem(DataBase& data_base, const std::vector<std::string>& arguments) {
         return IntegerResult(0);
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& value) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* set_value = std::get_if<SetElement>(&value);
 
         if (!set_value) {
@@ -77,7 +74,8 @@ Result SRem(DataBase& data_base, const std::vector<std::string>& arguments) {
     });
 }
 
-Result SIsMember(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result SIsMember(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -98,7 +96,8 @@ Result SIsMember(DataBase& data_base, const std::vector<std::string>& arguments)
     return IntegerResult(set_value->Contains(member) ? 1 : 0);
 }
 
-Result SMembers(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result SMembers(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -117,7 +116,8 @@ Result SMembers(DataBase& data_base, const std::vector<std::string>& arguments) 
     return ListResult(set_value->GetAll());
 }
 
-Result SCard(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result SCard(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -136,7 +136,8 @@ Result SCard(DataBase& data_base, const std::vector<std::string>& arguments) {
     return IntegerResult(set_value->Size());
 }
 
-Result SUnion(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result SUnion(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -162,7 +163,8 @@ Result SUnion(DataBase& data_base, const std::vector<std::string>& arguments) {
     return ListResult(result.GetAll());
 }
 
-Result SInter(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result SInter(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -200,7 +202,8 @@ Result SInter(DataBase& data_base, const std::vector<std::string>& arguments) {
     return ListResult(result.GetAll());
 }
 
-Result SDiff(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result SDiff(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -238,7 +241,8 @@ Result SDiff(DataBase& data_base, const std::vector<std::string>& arguments) {
     return ListResult(result.GetAll());
 }
 
-Result SMove(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result SMove(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 4)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -273,7 +277,7 @@ Result SMove(DataBase& data_base, const std::vector<std::string>& arguments) {
 
         result = data_base.PutElement(destination, std::move(destination_set));
     } else {
-        result = data_base.UpdateElement(destination, [&](DataBase::Variant& value) -> Result {
+        result = data_base.UpdateElement(destination, [&](typename DataBase<Storage>::Variant& value) -> Result {
             auto* destination_set = std::get_if<SetElement>(&value);
 
             if (!destination_set) {
@@ -290,7 +294,7 @@ Result SMove(DataBase& data_base, const std::vector<std::string>& arguments) {
         return result;
     }
 
-    result = data_base.UpdateElement(source, [&](DataBase::Variant& value) -> Result {
+    result = data_base.UpdateElement(source, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* source_set = std::get_if<SetElement>(&value);
 
         if (!source_set) {

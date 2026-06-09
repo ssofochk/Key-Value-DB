@@ -1,8 +1,3 @@
-#include "commands.hpp"
-#include "data_base.hpp"
-#include "geo_element.hpp"
-#include "result_types.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -14,11 +9,11 @@
 #include <variant>
 #include <vector>
 
-const double kEarthRadiusMeters = 6372800.0;
-const double kMinLongitude = -180.0;
-const double kMaxLongitude = 180.0;
-const double kMinLatitude = -85.05112878;
-const double kMaxLatitude = 85.05112878;
+inline const double kEarthRadiusMeters = 6372800.0;
+inline const double kMinLongitude = -180.0;
+inline const double kMaxLongitude = 180.0;
+inline const double kMinLatitude = -85.05112878;
+inline const double kMaxLatitude = 85.05112878;
 
 struct GeoSearchRequest {
     GeoPoint center_;
@@ -35,11 +30,11 @@ struct GeoSearchValue {
     double distance_;
 };
 
-double ToRadians(double degrees) {
+inline double ToRadians(double degrees) {
     return degrees * std::numbers::pi / 180.0;
 }
 
-bool ParseDouble(const std::string& value, double& result) {
+inline bool ParseDouble(const std::string& value, double& result) {
     try {
         std::size_t position = 0;
         result = std::stod(value, &position);
@@ -56,7 +51,7 @@ bool ParseDouble(const std::string& value, double& result) {
     return true;
 }
 
-bool ParseSize(const std::string& value, std::size_t& result) {
+inline bool ParseSize(const std::string& value, std::size_t& result) {
     try {
         std::size_t position = 0;
         result = std::stoull(value, &position);
@@ -73,12 +68,12 @@ bool ParseSize(const std::string& value, std::size_t& result) {
     return true;
 }
 
-bool IsValidPosition(double longitude, double latitude) {
+inline bool IsValidPosition(double longitude, double latitude) {
     return longitude >= kMinLongitude && longitude <= kMaxLongitude &&
         latitude >= kMinLatitude && latitude <= kMaxLatitude;
 }
 
-double DistanceMeters(const GeoPoint& first, const GeoPoint& second) {
+inline double DistanceMeters(const GeoPoint& first, const GeoPoint& second) {
     double first_latitude = ToRadians(first.latitude_);
     double second_latitude = ToRadians(second.latitude_);
 
@@ -97,7 +92,7 @@ double DistanceMeters(const GeoPoint& first, const GeoPoint& second) {
     return kEarthRadiusMeters * angle;
 }
 
-bool GetUnitMultiplier(const std::string& unit, double& multiplier) {
+inline bool GetUnitMultiplier(const std::string& unit, double& multiplier) {
     std::string normalized = Normalize(unit);
 
     if (normalized == "M") {
@@ -123,7 +118,7 @@ bool GetUnitMultiplier(const std::string& unit, double& multiplier) {
     return false;
 }
 
-std::string FormatDouble(double value) {
+inline std::string FormatDouble(double value) {
     std::string result = std::to_string(value);
 
     while (!result.empty() && result.back() == '0') {
@@ -137,7 +132,7 @@ std::string FormatDouble(double value) {
     return result;
 }
 
-Result ParseGeoSearchRequest(const GeoElement& geo,
+inline Result ParseGeoSearchRequest(const GeoElement& geo,
     const std::vector<std::string>& arguments, std::size_t start_index,
     GeoSearchRequest& request) {
     if (start_index >= arguments.size()) {
@@ -244,7 +239,7 @@ Result ParseGeoSearchRequest(const GeoElement& geo,
     return OkResult{};
 }
 
-std::vector<GeoSearchValue> FindByRadius(const GeoElement& geo,
+inline std::vector<GeoSearchValue> FindByRadius(const GeoElement& geo,
     const GeoSearchRequest& request) {
     std::vector<GeoSearchValue> result;
 
@@ -259,7 +254,7 @@ std::vector<GeoSearchValue> FindByRadius(const GeoElement& geo,
     return result;
 }
 
-void PrepareGeoSearchResult(std::vector<GeoSearchValue>& result,
+inline void PrepareGeoSearchResult(std::vector<GeoSearchValue>& result,
     const GeoSearchRequest& request) {
     if (request.ascending_) {
         std::sort(result.begin(), result.end(),
@@ -280,7 +275,8 @@ void PrepareGeoSearchResult(std::vector<GeoSearchValue>& result,
     }
 }
 
-Result GeoAdd(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result GeoAdd(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (arguments.size() < 5 || arguments.size() % 3 != 2) {
         return ErrorResult{"wrong number of arguments"};
     }
@@ -325,7 +321,7 @@ Result GeoAdd(DataBase& data_base, const std::vector<std::string>& arguments) {
         return IntegerResult{added};
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& value) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* geo = std::get_if<GeoElement>(&value);
 
         if (!geo) {
@@ -342,7 +338,8 @@ Result GeoAdd(DataBase& data_base, const std::vector<std::string>& arguments) {
     });
 }
 
-Result GeoPos(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result GeoPos(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult{"wrong number of arguments"};
     }
@@ -378,7 +375,8 @@ Result GeoPos(DataBase& data_base, const std::vector<std::string>& arguments) {
     return result;
 }
 
-Result GeoDist(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result GeoDist(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!(CheckEqualArguments(arguments, 4) || CheckEqualArguments(arguments, 5))) {
         return ErrorResult{"wrong number of arguments"};
     }
@@ -413,7 +411,8 @@ Result GeoDist(DataBase& data_base, const std::vector<std::string>& arguments) {
     return StringResult{FormatDouble(distance)};
 }
 
-Result GeoSearch(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result GeoSearch(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 6)) {
         return ErrorResult{"wrong number of arguments"};
     }
@@ -454,7 +453,8 @@ Result GeoSearch(DataBase& data_base, const std::vector<std::string>& arguments)
     return result;
 }
 
-Result GeoSearchStore(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result GeoSearchStore(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 7)) {
         return ErrorResult{"wrong number of arguments"};
     }

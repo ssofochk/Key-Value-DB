@@ -16,20 +16,24 @@
 #include "geo_element.hpp"
 #include "result_types.hpp"
 
+#include "commands.hpp"
+
+using DataBaseStoredTypes = std::variant<StringElement, ListElement, SetElement, GeoElement>;
+using DeathTime = std::chrono::steady_clock::time_point;
+
+struct DataBaseElement {
+    DataBaseStoredTypes value_;
+    std::optional<DeathTime> death_time_;
+};
+
+template <class Storage = std::unordered_map<std::string, DataBaseElement>>
 class DataBase {
 public:
-    using Variant = std::variant<StringElement, ListElement, SetElement, GeoElement>;
-    using Command = Result (*)(DataBase&, const std::vector<std::string>&);
-    using Death_Time = std::chrono::steady_clock::time_point;
-
-    struct Element {
-        Variant value_;
-        std::optional<Death_Time> death_time_;
-    };
+    using Variant = DataBaseStoredTypes;
+    using Element = DataBaseElement;
+    using Command = Result (*)(DataBase<Storage>&, const std::vector<std::string>&);
 
     DataBase();
-
-    void RegisterCommand(const std::string& name, Command command);
 
     Result Execute(const std::string& line);
 
@@ -52,8 +56,9 @@ public:
     std::size_t GetMaxMemory() const;  
 
 private:
-    std::unordered_map<std::string, Element> data_;
+    Storage data_;
     std::unordered_map<std::string, Command> commands_;
+    void RegisterCommand(const std::string& name, Command command);
 
     bool IsDead(const Element& element) const;
     void ClearDead(const std::string& key);
@@ -69,3 +74,11 @@ private:
     std::size_t KeyMemoryStored(const std::string& key) const;
     bool CanStore(std::size_t old_memory, std::size_t new_memory) const; 
 };
+
+#include "commands_string.tpp"
+#include "commands_list.tpp"
+#include "commands_set.tpp"
+#include "commands_general.tpp"
+#include "commands_geo.tpp"
+
+#include "data_base.tpp"

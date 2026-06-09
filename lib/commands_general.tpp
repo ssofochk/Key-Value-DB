@@ -1,5 +1,3 @@
-#include "commands.hpp"
-#include "data_base.hpp"
 #include "geo_element.hpp"
 #include "list_element.hpp"
 #include "result_types.hpp"
@@ -12,7 +10,8 @@
 #include <variant>
 #include <vector>
 
-Result Type(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result Type(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -43,7 +42,8 @@ Result Type(DataBase& data_base, const std::vector<std::string>& arguments) {
     return StringResult("none");
 }
 
-Result Del(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result Del(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -59,7 +59,8 @@ Result Del(DataBase& data_base, const std::vector<std::string>& arguments) {
     return IntegerResult(removed);
 }
 
-Result Exists(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result Exists(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -75,7 +76,7 @@ Result Exists(DataBase& data_base, const std::vector<std::string>& arguments) {
     return IntegerResult(exists);
 }
 
-bool TryMatch(const std::string& text, const std::string& pattern,
+inline bool TryMatch(const std::string& text, const std::string& pattern,
     std::size_t text_index, std::size_t pattern_index) {
     if (pattern_index == pattern.size()) {
         return text_index == text.size();
@@ -102,11 +103,12 @@ bool TryMatch(const std::string& text, const std::string& pattern,
     return false;
 }
 
-bool IsMatch(const std::string& text, const std::string& pattern) {
+inline bool IsMatch(const std::string& text, const std::string& pattern) {
     return TryMatch(text, pattern, 0, 0);
 }
 
-Result Keys(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result Keys(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -123,7 +125,8 @@ Result Keys(DataBase& data_base, const std::vector<std::string>& arguments) {
     return result;
 }
 
-Result FlushDB(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result FlushDB(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 1)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -132,7 +135,8 @@ Result FlushDB(DataBase& data_base, const std::vector<std::string>& arguments) {
     return OkResult{};
 }
 
-Result DBSize(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result DBSize(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 1)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -140,7 +144,8 @@ Result DBSize(DataBase& data_base, const std::vector<std::string>& arguments) {
     return IntegerResult(data_base.Size());
 }
 
-Result Config(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result Config(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -192,7 +197,8 @@ Result Config(DataBase& data_base, const std::vector<std::string>& arguments) {
     return ErrorResult("syntax error");
 }
 
-Result Memory(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result Memory(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -210,7 +216,8 @@ Result Memory(DataBase& data_base, const std::vector<std::string>& arguments) {
     return IntegerResult(data_base.MemoryStored(arguments[2]));
 }
 
-Result Expire(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result Expire(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -228,7 +235,8 @@ Result Expire(DataBase& data_base, const std::vector<std::string>& arguments) {
     return IntegerResult(data_base.SetTTL(arguments[1], seconds) ? 1 : 0);
 }
 
-Result TTL(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result TTL(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }

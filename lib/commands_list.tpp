@@ -1,8 +1,3 @@
-#include "commands.hpp"
-#include "data_base.hpp"
-#include "list_element.hpp"
-#include "result_types.hpp"
-
 #include <cstddef>
 #include <stdexcept>
 #include <string>
@@ -10,7 +5,8 @@
 #include <variant>
 #include <vector>
 
-Result LPush(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result LPush(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -35,7 +31,7 @@ Result LPush(DataBase& data_base, const std::vector<std::string>& arguments) {
         return IntegerResult(size);
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& value) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* list_value = std::get_if<ListElement>(&value);
 
         if (!list_value) {
@@ -50,7 +46,8 @@ Result LPush(DataBase& data_base, const std::vector<std::string>& arguments) {
     });
 }
 
-Result RPush(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result RPush(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckMinimalArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -75,7 +72,7 @@ Result RPush(DataBase& data_base, const std::vector<std::string>& arguments) {
         return IntegerResult(size);
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& value) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* list_value = std::get_if<ListElement>(&value);
 
         if (!list_value) {
@@ -90,7 +87,8 @@ Result RPush(DataBase& data_base, const std::vector<std::string>& arguments) {
     });
 }
 
-Result LPop(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result LPop(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!(CheckEqualArguments(arguments, 3) || CheckEqualArguments(arguments, 2))) {
         return ErrorResult("wrong number of arguments");
     }
@@ -101,7 +99,7 @@ Result LPop(DataBase& data_base, const std::vector<std::string>& arguments) {
         return NilResult{};
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& value) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* list_value = std::get_if<ListElement>(&value);
 
         if (!list_value) {
@@ -145,7 +143,8 @@ Result LPop(DataBase& data_base, const std::vector<std::string>& arguments) {
     });
 }
 
-Result RPop(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result RPop(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!(CheckEqualArguments(arguments, 3) || CheckEqualArguments(arguments, 2))) {
         return ErrorResult("wrong number of arguments");
     }
@@ -156,7 +155,7 @@ Result RPop(DataBase& data_base, const std::vector<std::string>& arguments) {
         return NilResult{};
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& value) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* list_value = std::get_if<ListElement>(&value);
 
         if (!list_value) {
@@ -200,7 +199,8 @@ Result RPop(DataBase& data_base, const std::vector<std::string>& arguments) {
     });
 }
 
-Result LLen(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result LLen(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 2)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -226,7 +226,8 @@ void NormalizeIndex(int& index, const std::size_t size) {
     }
 }
 
-Result LRange(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result LRange(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 4)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -286,7 +287,8 @@ Result LRange(DataBase& data_base, const std::vector<std::string>& arguments) {
     return ListResult(ans);
 }
 
-Result LIndex(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result LIndex(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 3)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -324,7 +326,8 @@ Result LIndex(DataBase& data_base, const std::vector<std::string>& arguments) {
     return StringResult((*list_value)[index]);
 }
 
-Result LSet(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result LSet(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 4)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -345,7 +348,7 @@ Result LSet(DataBase& data_base, const std::vector<std::string>& arguments) {
         return ErrorResult("no such key");
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& value) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& value) -> Result {
         auto* list_value = std::get_if<ListElement>(&value);
 
         if (!list_value) {
@@ -364,7 +367,8 @@ Result LSet(DataBase& data_base, const std::vector<std::string>& arguments) {
     });
 }
 
-Result LInsert(DataBase& data_base, const std::vector<std::string>& arguments) {
+template <class Storage>
+Result LInsert(DataBase<Storage>& data_base, const std::vector<std::string>& arguments) {
     if (!CheckEqualArguments(arguments, 5)) {
         return ErrorResult("wrong number of arguments");
     }
@@ -382,7 +386,7 @@ Result LInsert(DataBase& data_base, const std::vector<std::string>& arguments) {
         return IntegerResult(0);
     }
 
-    return data_base.UpdateElement(key, [&](DataBase::Variant& element) -> Result {
+    return data_base.UpdateElement(key, [&](typename DataBase<Storage>::Variant& element) -> Result {
         auto* list_value = std::get_if<ListElement>(&element);
 
         if (!list_value) {
