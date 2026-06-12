@@ -1,5 +1,5 @@
-#include <benchmark\\benchmark.h>
-#include "data_base.hpp"
+#include <benchmark/benchmark.h>
+#include "cache.hpp"
 #include <string>
 
 static void BM_Empty(benchmark::State& state)
@@ -7,10 +7,10 @@ static void BM_Empty(benchmark::State& state)
     for (auto _ : state)
     {
         state.PauseTiming();
-        DataBase db;
+        Cache<std::string> db;
         state.ResumeTiming();
 
-        db.PutElement("sf", std::string("sds"));
+        db.Put("sf", std::string("sds"));
         db.IsContain("sf");
         db.IsContain("sa");
         db.IsContain("asfdg");
