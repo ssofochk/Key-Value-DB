@@ -7,7 +7,7 @@ static void BM_Empty(benchmark::State& state)
     for (auto _ : state)
     {
         state.PauseTiming();
-        Cache<std::string> db;
+        Cache<Policies::NOEVICTION, std::string> db;
         state.ResumeTiming();
 
         db.Put("sf", std::string("sds"));

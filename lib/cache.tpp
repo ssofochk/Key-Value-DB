@@ -9,17 +9,17 @@
 #include <variant>
 #include <vector>
 
-template <typename T>
-std::size_t ObjectMemory(const T& value) {
+template <typename Type>
+std::size_t ObjectMemory(const Type& value) {
     if constexpr (requires { value.capacity(); }) {
-        return sizeof(T) + value.capacity();
+        return sizeof(Type) + value.capacity();
     } else {
-        return sizeof(T);
+        return sizeof(Type);
     }
 }
 
-template <typename... Types>
-bool Cache<Types...>::IsDead(const Cache<Types...>::Element& element) const {
+template <Policies Policy, typename... Types>
+bool Cache<Policy, Types...>::IsDead(const Cache<Policy, Types...>::Element& element) const {
     if (!element.death_time_.has_value()) {
         return false;
     }
@@ -27,8 +27,8 @@ bool Cache<Types...>::IsDead(const Cache<Types...>::Element& element) const {
     return std::chrono::steady_clock::now() >= *element.death_time_;
 }
 
-template <typename... Types>
-void Cache<Types...>::ClearDead(const std::string& key) {
+template <Policies Policy, typename... Types>
+void Cache<Policy, Types...>::ClearDead(const std::string& key) {
     auto iterator = data_.find(key);
 
     if (iterator == data_.end()) {
@@ -43,8 +43,8 @@ void Cache<Types...>::ClearDead(const std::string& key) {
     data_.erase(iterator);
 }
 
-template <typename... Types>
-void Cache<Types...>::ClearAllDead() {
+template <Policies Policy, typename... Types>
+void Cache<Policy, Types...>::ClearAllDead() {
     for (auto iterator = data_.begin(); iterator != data_.end();) {
         if (IsDead(iterator->second)) {
             memory_usage_ -= KeyMemoryStored(iterator->first) + MemoryStored(iterator->second);
@@ -55,8 +55,8 @@ void Cache<Types...>::ClearAllDead() {
     }
 }
 
-template <typename... Types>
-typename Cache<Types...>::Variant* Cache<Types...>::Get(const std::string& key) {
+template <Policies Policy, typename... Types>
+typename Cache<Policy, Types...>::Variant* Cache<Policy, Types...>::Get(const std::string& key) {
     ClearDead(key);
 
     auto iterator = data_.find(key);
@@ -67,8 +67,8 @@ typename Cache<Types...>::Variant* Cache<Types...>::Get(const std::string& key) 
     return &iterator->second.value_;
 }
 
-template <typename... Types>
-bool Cache<Types...>::IsContain(const std::string& key) {
+template <Policies Policy, typename... Types>
+bool Cache<Policy, Types...>::IsContain(const std::string& key) {
     auto* value = Get(key);
 
     if (!value) {
@@ -78,8 +78,8 @@ bool Cache<Types...>::IsContain(const std::string& key) {
     return true;
 }
 
-template <typename... Types>
-bool Cache<Types...>::Put(const std::string& key, Variant value) {
+template <Policies Policy, typename... Types>
+bool Cache<Policy, Types...>::Put(const std::string& key, Variant value) {
     ClearDead(key);
 
     std::size_t old_memory = 0;
@@ -102,8 +102,8 @@ bool Cache<Types...>::Put(const std::string& key, Variant value) {
     return true;
 }
 
-template <typename... Types>
-bool Cache<Types...>::Remove(const std::string& key) {
+template <Policies Policy, typename... Types>
+bool Cache<Policy, Types...>::Remove(const std::string& key) {
     ClearDead(key);
 
     auto iterator = data_.find(key);
@@ -118,20 +118,20 @@ bool Cache<Types...>::Remove(const std::string& key) {
     return true;
 }
 
-template <typename... Types>
-void Cache<Types...>::ClearDB() {
+template <Policies Policy, typename... Types>
+void Cache<Policy, Types...>::ClearDB() {
     data_.clear();
     memory_usage_ = 0;
 }
 
-template <typename... Types>
-std::size_t Cache<Types...>::Size() {
+template <Policies Policy, typename... Types>
+std::size_t Cache<Policy, Types...>::Size() {
     ClearAllDead();
     return data_.size();
 }
 
-template <typename... Types>
-bool Cache<Types...>::SetTTL(const std::string& key, int seconds) {
+template <Policies Policy, typename... Types>
+bool Cache<Policy, Types...>::SetTTL(const std::string& key, int seconds) {
     ClearDead(key);
 
     auto iterator = data_.find(key);
@@ -151,8 +151,8 @@ bool Cache<Types...>::SetTTL(const std::string& key, int seconds) {
     return true;
 }
 
-template <typename... Types>
-int64_t Cache<Types...>::GetTTL(const std::string& key) {
+template <Policies Policy, typename... Types>
+int64_t Cache<Policy, Types...>::GetTTL(const std::string& key) {
     ClearDead(key);
 
     auto iterator = data_.find(key);
@@ -178,20 +178,20 @@ int64_t Cache<Types...>::GetTTL(const std::string& key) {
     return seconds.count();
 }
 
-template <typename... Types>
-std::size_t Cache<Types...>::MemoryStored(const Variant& value) const {
+template <Policies Policy, typename... Types>
+std::size_t Cache<Policy, Types...>::MemoryStored(const Variant& value) const {
     return std::visit([](const auto& element) {
         return ObjectMemory(element);
     }, value);
 }
 
-template <typename... Types>
-std::size_t Cache<Types...>::MemoryStored(const Element& element) const {
+template <Policies Policy, typename... Types>
+std::size_t Cache<Policy, Types...>::MemoryStored(const Element& element) const {
     return MemoryStored(element.value_);
 }
 
-template <typename... Types>
-std::size_t Cache<Types...>::MemoryStored(const std::string& key) {
+template <Policies Policy, typename... Types>
+std::size_t Cache<Policy, Types...>::MemoryStored(const std::string& key) {
     auto* value = Get(key);
 
     if (!value) {
@@ -201,13 +201,13 @@ std::size_t Cache<Types...>::MemoryStored(const std::string& key) {
     return KeyMemoryStored(key) + MemoryStored(*value);
 }
 
-template <typename... Types>
-std::size_t Cache<Types...>::KeyMemoryStored(const std::string& key) const {
+template <Policies Policy, typename... Types>
+std::size_t Cache<Policy, Types...>::KeyMemoryStored(const std::string& key) const {
     return sizeof(std::string) + key.capacity();
 }
 
-template <typename... Types>
-bool Cache<Types...>::CanStore(std::size_t old_memory, std::size_t new_memory) const {
+template <Policies Policy, typename... Types>
+bool Cache<Policy, Types...>::CanStore(std::size_t old_memory, std::size_t new_memory) const {
     if (max_memory_ == 0) {
         return true;
     }
@@ -215,12 +215,12 @@ bool Cache<Types...>::CanStore(std::size_t old_memory, std::size_t new_memory) c
     return memory_usage_ - old_memory + new_memory <= max_memory_;
 }
 
-template <typename... Types>
-void Cache<Types...>::SetMaxMemory(std::size_t memory_size) {
+template <Policies Policy, typename... Types>
+void Cache<Policy, Types...>::SetMaxMemory(std::size_t memory_size) {
     max_memory_ = memory_size;
 }
 
-template <typename... Types>
-std::size_t Cache<Types...>::GetMaxMemory() const {
+template <Policies Policy, typename... Types>
+std::size_t Cache<Policy, Types...>::GetMaxMemory() const {
     return max_memory_;
 }

@@ -10,9 +10,13 @@
 #include <variant>
 #include <vector>
 
-template <typename... Types>
+#include "policies.hpp"
+
+template <Policies Policy, typename... Types>
 class Cache {
 public:
+    static_assert(sizeof...(Types) > 0);
+
     using Variant = std::variant<Types...>;
     using DeathTime = std::chrono::steady_clock::time_point;
 

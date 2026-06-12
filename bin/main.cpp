@@ -1,5 +1,5 @@
 #include "cache.hpp"
 
 int main () {
-    Cache<int> c;
+    Cache<Policies::NOEVICTION, int> c;
 }

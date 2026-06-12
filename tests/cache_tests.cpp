@@ -3,7 +3,7 @@
 #include "cache.hpp"
 
 TEST(StringTest, SetGet) {
-    Cache<std::string> cache;
+    Cache<Policies::NOEVICTION, std::string> cache;
 
     ASSERT_TRUE(cache.Put("Avito", "Tech"));
 
