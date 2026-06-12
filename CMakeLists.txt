@@ -12,6 +12,12 @@ include_directories(lib)
 
 add_subdirectory(lib)
 add_subdirectory(bin)
+add_subdirectory(benchmarks)
+
+set(BENCHMARK_ENABLE_TESTING OFF)
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
+
+add_subdirectory(Bench_util/benchmark)
 
 enable_testing()
 add_subdirectory(tests)
