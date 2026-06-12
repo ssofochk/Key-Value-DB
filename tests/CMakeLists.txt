@@ -13,7 +13,7 @@ enable_testing()
 
 add_executable(
     app-tests
-    DB_tests.cpp
+    cache_tests.cpp
 )
 
 target_include_directories(
@@ -24,7 +24,6 @@ target_include_directories(
 
 target_link_libraries(
     app-tests
-    data_base
     GTest::gtest_main
 )
 
