@@ -229,3 +229,9 @@ template <Policies Policy, typename... Types>
 std::uint64_t Cache<Policy, Types...>::GetEvictionCount() const {
     return 0;
 }
+
+template <Policies Policy, typename... Types>
+std::size_t Cache<Policy, Types...>::EstimateMemoryBytes() const {
+    std::size_t bytes = sizeof(*this);
+    return bytes;
+}
