@@ -39,7 +39,7 @@ void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std
 
             auto start = std::chrono::steady_clock::now();
             int t = K;
-            while(--t) {
+            while(t--) {
                 benchmark::DoNotOptimize(
                     cache.Get(keys[i % kCacheSize])
                 );
@@ -60,14 +60,10 @@ void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std
     state.counters["p50"] = GetPercentile(latencies, 0.5);
     state.counters["p99"] = GetPercentile(latencies, 0.99);
 
-    // state.counters["ops"] = benchmark::Counter(kCacheSize * kLoopCountOfReps,
-    //     benchmark::Counter::kIsIterationInvariantRate) / K;
-
-    state.counters["ops"] =
-    benchmark::Counter(
-        kCacheSize * kLoopCountOfReps * 1000,
-        benchmark::Counter::kIsRate
+    state.SetItemsProcessed(
+        state.iterations() * kCacheSize * kLoopCountOfReps * K
     );
+
 }
 
 
