@@ -3,20 +3,20 @@
 
 namespace db_handler{
 
-template <int ThreadCount, Policies Policy, typename... Types>
+template <int ThreadCount, Policies Policy>
 class Handler{
 public:
 
-    using Variant = Cache<Policy, Types...>::Variant;
-    using Element = Cache<Policy, Types...>::Element;
+    using Type = std::string;
+    using Element = Cache<Policy>::Element;
 
-    Variant* Get(const std::string& key);
+    Type* Get(const std::string& key);
 
-    bool Set(const std::string& key, Variant value);
+    bool Set(const std::string& key, Type value);
 
 private:
     ThreadPool thread_pool = ThreadPool(ThreadCount);
-    Cache<Policy, Types...> cache_module;
+    Cache<Policy> cache_module;
     std::mutex cache_mutex;                                 // temporarily one mutex, later could be  fragmentation
     // std::mutex fragments_mutexes[ThreadCount];           // commented for now, will test on later versions
 };

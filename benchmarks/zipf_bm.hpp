@@ -7,7 +7,7 @@ private:
     double probability = 0.9;
 public:
     template <Policies Policy>
-    void execute(Cache<Policy, int>& cache, const std::vector<std::string>& keys) {
+    void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
         if (rand() % 100 > probability * 100) {
             int idx = rand() % static_cast<int>(keys.size() * (1 - main_segment));
             cache.Get(keys[main_segment * keys.size() + idx]);

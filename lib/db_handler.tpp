@@ -1,11 +1,13 @@
+#include <string>
+#include "policies.hpp"
 
-template <Policies Policy, typename... Types>
-db_handler::Handler<Policy, Types...>::Variant* db_handler::Handler<Policy, Types...>::Get(const std::string& key){
+template <Policies Policy>
+std::string* db_handler::Handler<Policy>::Get(const db_handler::Handler<Policy>::Type& key) {
     // todo
 }
 
 
-template <Policies Policy, typename... Types>
-bool db_handler::Handler<Policy, Types...>::Set(const std::string& key, db_handler::Handler<Policy, Types...>::Variant value){
+template <Policies Policy>
+bool db_handler::Handler<Policy>::Set(const std::string& key, db_handler::Handler<Policy>::Type value) {
     // todo
 }

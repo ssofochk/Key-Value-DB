@@ -10,14 +10,14 @@ const int kCacheSize = 100;
 
 template <Policies Policy>
 struct CacheFixture : benchmark::Fixture {
-    Cache<Policy, int> cache;
+    Cache<Policy> cache;
     std::vector <std::string> keys;
     void SetUp(const benchmark::State&) override {
         keys.resize(kCacheSize);
 
         for (auto i = 0; i < kCacheSize; ++i) {
             keys[i] = std::to_string(i);
-            cache.Put(keys[i], i);
+            cache.Put(keys[i], std::to_string(i));
         }
     }
 };
@@ -33,7 +33,7 @@ const int K = 1000;
 
 
 template <Policies Policy, typename Workload>
-void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std::string>& keys, Workload workload) {
+void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::string>& keys, Workload workload) {
     
     std::vector <uint64_t> latencies(kCacheSize * kLoopCountOfReps);
     
