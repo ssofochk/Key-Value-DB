@@ -1,10 +1,8 @@
-add_executable(test_bench test_benchmark.cpp)
+add_executable(bm_runner benchmark_runner.cpp)
 
 target_link_libraries(
-    test_bench
+    bm_runner
     PRIVATE
     benchmark::benchmark
     benchmark::benchmark_main
 )
-
-target_include_directories(test_bench PUBLIC ${PROJECT_SOURCE_DIR})

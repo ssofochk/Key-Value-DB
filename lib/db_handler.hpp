@@ -35,6 +35,7 @@ private:
     std::hash<std::string> hash_func_;
 
     size_t GetMutexHash(const std::string& key);
+
 };
 
 }; // namespace db_handler

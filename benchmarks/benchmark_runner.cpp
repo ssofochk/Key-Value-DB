@@ -1,0 +1,99 @@
+#include <benchmark/benchmark.h>
+#include "cache.hpp"
+#include <string>
+#include <mutex>
+#include <chrono>
+#include <algorithm>
+
+const int kCacheSize = 100;
+
+
+template <Policies Policy>
+struct CacheFixture : benchmark::Fixture {
+    Cache<Policy> cache;
+    std::vector <std::string> keys;
+    void SetUp(const benchmark::State&) override {
+        keys.resize(kCacheSize);
+
+        for (auto i = 0; i < kCacheSize; ++i) {
+            keys[i] = std::to_string(i);
+            cache.Put(keys[i], std::to_string(i));
+        }
+    }
+};
+
+
+uint64_t GetPercentile(const std::vector<uint64_t>& v, double x) {
+    size_t idx = static_cast<size_t>(x * (v.size() - 1));
+    return v[idx];
+}
+
+const int kLoopCountOfReps = 10;
+const int K = 1000;
+
+
+template <Policies Policy, typename Workload>
+void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::string>& keys, Workload workload) {
+    
+    std::vector <uint64_t> latencies(kCacheSize * kLoopCountOfReps);
+    
+    const auto evictions_before = cache.GetEvictionCount();
+
+    for (auto _ : state) {
+        for (int i = 0; i < kCacheSize * kLoopCountOfReps; ++i) {
+
+            auto start = std::chrono::steady_clock::now();
+            int t = K;
+            while(t--) {
+                workload.template execute<Policy>(cache, keys);
+            }
+
+            auto end = std::chrono::steady_clock::now();
+
+            latencies[i] = static_cast<uint64_t>
+                (std::chrono::duration_cast
+                    <std::chrono::nanoseconds>
+                        (end - start).count()
+                ) / K;
+        }
+    }
+
+    std::sort(latencies.begin(), latencies.end());
+
+    state.counters["p50"] = GetPercentile(latencies, 0.5);
+    state.counters["p99"] = GetPercentile(latencies, 0.99);
+
+    std::uint64_t hits = cache.GetHits();
+    std::uint64_t misses = cache.GetMisses();
+    const uint64_t total_gets = hits + misses;
+
+    if (total_gets == 0) {
+        state.counters["hit_ratio_percent"] = 0.0;
+    } else {
+        state.counters["hit_ratio_percent"] = 100 * static_cast<double>(hits) / static_cast<double>(total_gets);
+    }
+
+    const auto evictions_after =
+    cache.GetEvictionCount();
+
+    state.counters["eviction_count"] = 
+    static_cast<double>(evictions_after - evictions_before);
+
+    state.counters["memory_bytes"] = 
+    static_cast<double>(cache.EstimateMemoryBytes());
+
+
+    state.SetItemsProcessed(
+        state.iterations() * kCacheSize * kLoopCountOfReps * K
+    );
+
+}
+
+
+
+
+#include "sequential_loop_bm.hpp"
+#include "uniform_bm.hpp"
+#include "zipf_bm.hpp"
+
+BENCHMARK_MAIN();

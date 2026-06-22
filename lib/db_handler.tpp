@@ -76,4 +76,3 @@ size_t DB_HANDLER_MACRO::GetMutexHash(const std::string& key){
     return hash_func_(key) % MutexCount;
 }
 
-
