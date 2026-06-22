@@ -33,16 +33,27 @@ const int K = 1000;
 
 template <Policies Policy>
 void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std::string>& keys) {
+    
     std::vector <uint64_t> latencies(kCacheSize * kLoopCountOfReps);
+    std::uint64_t hits = 0;
+    std::uint64_t misses = 0;
+    const auto evictions_before = cache.GetEvictionCount();
+
     for (auto _ : state) {
         for (int i = 0; i < kCacheSize * kLoopCountOfReps; ++i) {
 
             auto start = std::chrono::steady_clock::now();
             int t = K;
-            while(--t) {
-                benchmark::DoNotOptimize(
-                    cache.Get(keys[i % kCacheSize])
-                );
+            while(t--) {
+
+                auto* result = cache.Get(keys[i % kCacheSize]);
+                benchmark::DoNotOptimize(result);
+
+                if (result != nullptr) {
+                    ++hits;
+                } else {
+                    ++misses;
+                }
             }
 
             auto end = std::chrono::steady_clock::now();
@@ -60,14 +71,28 @@ void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std
     state.counters["p50"] = GetPercentile(latencies, 0.5);
     state.counters["p99"] = GetPercentile(latencies, 0.99);
 
-    // state.counters["ops"] = benchmark::Counter(kCacheSize * kLoopCountOfReps,
-    //     benchmark::Counter::kIsIterationInvariantRate) / K;
+    const auto total_gets = hits + misses;
 
-    state.counters["ops"] =
-    benchmark::Counter(
-        kCacheSize * kLoopCountOfReps * 1000,
-        benchmark::Counter::kIsRate
+    if (total_gets == 0) {
+        state.counters["hit_ratio"] = 0.0;
+        state.counters["hit_ratio_percent"] = 0.0;
+    } else {
+        state.counters["hit_ratio"] = static_cast<double>(hits) /
+            static_cast<double>(total_gets);
+        state.counters["hit_ratio_percent"] = 100 * state.counters["hit_ratio"];
+    }
+
+    const auto evictions_after =
+    cache.GetEvictionCount();
+
+    state.counters["eviction_count"] = 
+    static_cast<double>(evictions_after - evictions_before);
+
+
+    state.SetItemsProcessed(
+        state.iterations() * kCacheSize * kLoopCountOfReps * K
     );
+
 }
 
 
