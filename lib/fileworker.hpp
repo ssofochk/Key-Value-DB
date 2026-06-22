@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <string>
 #include <shared_mutex>
+#include <optional>
 
 class FileWorker {
 public:
@@ -8,7 +9,7 @@ public:
         : path_(std::move(path)) {}
 
     template <typename T>
-    T read(const std::string& key);
+    std::optional<T> read(const std::string& key);
 
     template <typename T>
     void write(
