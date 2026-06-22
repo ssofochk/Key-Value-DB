@@ -41,6 +41,9 @@ public:
     void SetMaxMemory(std::size_t max_memory);
     std::size_t GetMaxMemory() const;  
 
+    std::uint64_t GetEvictionCount() const;
+    std::size_t EstimateMemoryBytes() const;
+
 private:
     std::unordered_map<std::string, Element> data_;
 
