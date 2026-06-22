@@ -1,10 +1,10 @@
-add_executable(test_bench test_benchmark.cpp)
+add_executable(seq_loop sequential_loop_bm.cpp)
 
 target_link_libraries(
-    test_bench
+    seq_loop
     PRIVATE
     benchmark::benchmark
     benchmark::benchmark_main
 )
 
-target_include_directories(test_bench PUBLIC ${PROJECT_SOURCE_DIR})
+target_include_directories(seq_loop PUBLIC ${PROJECT_SOURCE_DIR})
