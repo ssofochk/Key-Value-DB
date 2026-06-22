@@ -31,9 +31,14 @@ uint64_t GetPercentile(const std::vector<uint64_t>& v, double x) {
 const int kLoopCountOfReps = 10;
 const int K = 1000;
 
+
 template <Policies Policy, typename Workload>
 void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std::string>& keys, Workload workload) {
+    
     std::vector <uint64_t> latencies(kCacheSize * kLoopCountOfReps);
+    
+    const auto evictions_before = cache.GetEvictionCount();
+
     for (auto _ : state) {
         for (int i = 0; i < kCacheSize * kLoopCountOfReps; ++i) {
 
@@ -58,6 +63,26 @@ void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std
     state.counters["p50"] = GetPercentile(latencies, 0.5);
     state.counters["p99"] = GetPercentile(latencies, 0.99);
 
+    std::uint64_t hits = cache.GetHits();
+    std::uint64_t misses = cache.GetMisses();
+    const uint64_t total_gets = hits + misses;
+
+    if (total_gets == 0) {
+        state.counters["hit_ratio_percent"] = 0.0;
+    } else {
+        state.counters["hit_ratio_percent"] = 100 * static_cast<double>(hits) / static_cast<double>(total_gets);
+    }
+
+    const auto evictions_after =
+    cache.GetEvictionCount();
+
+    state.counters["eviction_count"] = 
+    static_cast<double>(evictions_after - evictions_before);
+
+    state.counters["memory_bytes"] = 
+    static_cast<double>(cache.EstimateMemoryBytes());
+
+
     state.SetItemsProcessed(
         state.iterations() * kCacheSize * kLoopCountOfReps * K
     );
@@ -67,41 +92,8 @@ void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std
 
 
 
-
-class SeqLoopWorkLoad {
-private:
-    size_t cur_idx = 0;
-public:
-    template <Policies Policy>
-    void execute(Cache<Policy, int>& cache, const std::vector<std::string>& keys) {
-        cache.Get(keys[cur_idx % keys.size()]);
-        ++cur_idx;
-    }
-};
-
-using Cache_NoEviction = CacheFixture<Policies::NOEVICTION>;
-BENCHMARK_F(Cache_NoEviction, SeqLoop) 
-(benchmark::State& state) {
-    bm_impl<Policies::NOEVICTION, SeqLoopWorkLoad>(state, cache, keys, SeqLoopWorkLoad{});
-}
-
-using Cache_Random = CacheFixture<Policies::RANDOM>;
-BENCHMARK_F(Cache_Random, SeqLoop) 
-(benchmark::State& state) {
-    bm_impl<Policies::RANDOM, SeqLoopWorkLoad>(state, cache, keys, SeqLoopWorkLoad{});
-}
-
-
-using Cache_LRU = CacheFixture<Policies::LRU>;
-BENCHMARK_F(Cache_LRU, SeqLoop) 
-(benchmark::State& state) {
-    bm_impl<Policies::LRU, SeqLoopWorkLoad>(state, cache, keys, SeqLoopWorkLoad{});
-}
-
-using Cache_LFU = CacheFixture<Policies::LFU>;
-BENCHMARK_F(Cache_LFU, SeqLoop) 
-(benchmark::State& state) {
-    bm_impl<Policies::LFU, SeqLoopWorkLoad>(state, cache, keys, SeqLoopWorkLoad{});
-}
+#include "sequential_loop_bm.hpp"
+#include "uniform_bm.hpp"
+#include "zipf_bm.hpp"
 
 BENCHMARK_MAIN();

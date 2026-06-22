@@ -44,6 +44,9 @@ public:
     std::uint64_t GetEvictionCount() const;
     std::size_t EstimateMemoryBytes() const;
 
+    uint64_t GetHits() const;
+    uint64_t GetMisses() const;
+
 private:
     std::unordered_map<std::string, Element> data_;
 
