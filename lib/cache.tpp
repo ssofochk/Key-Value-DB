@@ -224,3 +224,8 @@ template <Policies Policy, typename... Types>
 std::size_t Cache<Policy, Types...>::GetMaxMemory() const {
     return max_memory_;
 }
+
+template <Policies Policy, typename... Types>
+std::uint64_t Cache<Policy, Types...>::GetEvictionCount() const {
+    return 0;
+}

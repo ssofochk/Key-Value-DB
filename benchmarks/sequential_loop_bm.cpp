@@ -33,9 +33,11 @@ const int K = 1000;
 
 template <Policies Policy>
 void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std::string>& keys) {
+    
     std::vector <uint64_t> latencies(kCacheSize * kLoopCountOfReps);
     std::uint64_t hits = 0;
     std::uint64_t misses = 0;
+    const auto evictions_before = cache.GetEvictionCount();
 
     for (auto _ : state) {
         for (int i = 0; i < kCacheSize * kLoopCountOfReps; ++i) {
@@ -80,6 +82,11 @@ void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std
         state.counters["hit_ratio_percent"] = 100 * state.counters["hit_ratio"];
     }
 
+    const auto evictions_after =
+    cache.GetEvictionCount();
+
+    state.counters["eviction_count"] = 
+    static_cast<double>(evictions_after - evictions_before);
 
 
     state.SetItemsProcessed(
