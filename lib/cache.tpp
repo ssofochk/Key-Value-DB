@@ -235,3 +235,13 @@ std::size_t Cache<Policy, Types...>::EstimateMemoryBytes() const {
     std::size_t bytes = sizeof(*this);
     return bytes;
 }
+
+template <Policies Policy, typename... Types>
+uint64_t Cache<Policy, Types...>::GetHits() const {
+    return 1;
+}
+
+template <Policies Policy, typename... Types>
+uint64_t Cache<Policy, Types...>::GetMisses() const {
+    return 1;
+}
