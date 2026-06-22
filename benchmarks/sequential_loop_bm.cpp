@@ -74,12 +74,9 @@ void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std
     const auto total_gets = hits + misses;
 
     if (total_gets == 0) {
-        state.counters["hit_ratio"] = 0.0;
         state.counters["hit_ratio_percent"] = 0.0;
     } else {
-        state.counters["hit_ratio"] = static_cast<double>(hits) /
-            static_cast<double>(total_gets);
-        state.counters["hit_ratio_percent"] = 100 * state.counters["hit_ratio"];
+        state.counters["hit_ratio_percent"] = 100 * static_cast<double>(hits) / static_cast<double>(total_gets);
     }
 
     const auto evictions_after =
@@ -87,6 +84,9 @@ void bm_impl(benchmark::State& state, Cache<Policy, int>& cache, std::vector<std
 
     state.counters["eviction_count"] = 
     static_cast<double>(evictions_after - evictions_before);
+
+    state.counters["memory_bytes"] = 
+    static_cast<double>(cache.EstimateMemoryBytes());
 
 
     state.SetItemsProcessed(
