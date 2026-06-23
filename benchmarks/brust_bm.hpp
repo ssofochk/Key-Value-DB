@@ -15,7 +15,7 @@ public:
         if (burst) {
             cache.Put(
                 keys[rand() % keys.size()],
-                value++
+                std::to_string(value++)
             );
         } else {
             cache.Get(

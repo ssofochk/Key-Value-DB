@@ -12,9 +12,30 @@
 #include "policies.hpp"
 
 template <Policies Policy>
+struct CachePolicyMetadata {};
+
+template <>
+struct CachePolicyMetadata<Policies::LRU> {
+    std::uint64_t last_access_ = 0;
+};
+
+template <>
+struct CachePolicyMetadata<Policies::LFU> {
+    std::uint64_t frequency_ = 0;
+    std::uint64_t last_access_ = 0;
+};
+
+template <>
+struct CachePolicyMetadata<Policies::RANDOM> {};
+
+template <>
+struct CachePolicyMetadata<Policies::NOEVICTION> {};
+
+template <Policies Policy>
 class Cache {
 public:
     using DeathTime = std::chrono::steady_clock::time_point;
+    using Metadata = CachePolicyMetadata<Policy>;
 
     struct CacheElement {
         std::string value_;
@@ -45,6 +66,7 @@ public:
 
 private:
     std::unordered_map<std::string, Element> data_;
+    std::unordered_map<std::string, Metadata> metadata_;
 
     bool IsDead(const Element& element) const;
     void ClearDead(const std::string& key);
@@ -53,10 +75,17 @@ private:
     std::size_t max_memory_ = 0;
     std::size_t memory_usage_ = 0;
 
+    std::uint64_t misses_ = 0;
+    std::uint64_t hits_ = 0;
+    std::uint64_t eviction_count_ = 0;
+    std::uint64_t access_clock_ = 0;
+
     std::size_t MemoryStored(const std::string& value) const;
     std::size_t MemoryStored(const Element& element) const;
     std::size_t KeyMemoryStored(const std::string& key) const;
-    bool CanStore(std::size_t old_memory, std::size_t new_memory) const; 
+    bool FitMemory(std::size_t old_memory, std::size_t new_memory);
+    bool TryEvictByPolicy();
+    void Touch(const std::string& key);
 };
 
 #include "cache.tpp"
