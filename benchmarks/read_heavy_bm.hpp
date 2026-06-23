@@ -8,10 +8,10 @@ private:
 public:
     template <Policies Policy>
     void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
-        if (rand() % 100 < read_percent * 100) {
-            cache.Get(keys[rand() % keys.size()]);
+        if (Random() % 100 < read_percent * 100) {
+            cache.Get(keys[Random() % keys.size()]);
         } else {
-            cache.Put(keys[rand() % keys.size()], "value");
+            cache.Put(keys[Random() % keys.size()], "value");
         }
     }
 };

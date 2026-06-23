@@ -8,11 +8,11 @@ private:
 public:
     template <Policies Policy>
     void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
-        if (rand() % 100 > probability * 100) {
-            int idx = rand() % static_cast<int>(keys.size() * (1 - main_segment));
+        if (Random() % 100 > probability * 100) {
+            int idx = Random() % static_cast<int>(keys.size() * (1 - main_segment));
             cache.Get(keys[main_segment * keys.size() + idx]);
         } else {
-            int idx = rand() % static_cast<int>(keys.size() * main_segment);
+            int idx = Random() % static_cast<int>(keys.size() * main_segment);
             cache.Get(keys[idx]);
         }
     }
