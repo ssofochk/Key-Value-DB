@@ -96,6 +96,6 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
 #include "zipf_bm.hpp"
 #include "read_heavy_bm.hpp"
 #include "write_heavy_bm.hpp"
-#include "burst_bm.hpp"
+#include "brust_bm.hpp"
 
 BENCHMARK_MAIN();
