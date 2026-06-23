@@ -17,7 +17,6 @@ struct CacheFixture : benchmark::Fixture {
 
         for (auto i = 0; i < kCacheSize; ++i) {
             keys[i] = std::to_string(i);
-            cache.Put(keys[i], std::to_string(i));
         }
     }
 };
@@ -28,19 +27,19 @@ uint64_t GetPercentile(const std::vector<uint64_t>& v, double x) {
     return v[idx];
 }
 
-const int kLoopCountOfReps = 10;
+const int kOperationsCount = 1000;
 const int K = 1000;
 
 
 template <Policies Policy, typename Workload>
 void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::string>& keys, Workload workload) {
     
-    std::vector <uint64_t> latencies(kCacheSize * kLoopCountOfReps);
+    std::vector <uint64_t> latencies(kOperationsCount);
     
     const auto evictions_before = cache.GetEvictionCount();
 
     for (auto _ : state) {
-        for (int i = 0; i < kCacheSize * kLoopCountOfReps; ++i) {
+        for (int i = 0; i < kOperationsCount; ++i) {
 
             auto start = std::chrono::steady_clock::now();
             int t = K;
@@ -84,7 +83,7 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
 
 
     state.SetItemsProcessed(
-        state.iterations() * kCacheSize * kLoopCountOfReps * K
+        state.iterations() * kOperationsCount * K
     );
 
 }
@@ -95,5 +94,8 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
 #include "sequential_loop_bm.hpp"
 #include "uniform_bm.hpp"
 #include "zipf_bm.hpp"
+#include "read_heavy_bm.hpp"
+#include "write_heavy_bm.hpp"
+#include "burst_bm.hpp"
 
 BENCHMARK_MAIN();
