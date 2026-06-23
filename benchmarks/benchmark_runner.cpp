@@ -4,19 +4,34 @@
 #include <mutex>
 #include <chrono>
 #include <algorithm>
+#include <random>
 
 const int kCacheSize = 100;
+const int kOperationsCount = 1000;
 
+
+int Random(int l, int r) {
+    static std::mt19937 rng(std::random_device{}());
+    std::uniform_int_distribution<int> dist(l, r);
+    return dist(rng);
+}
+
+int Random() {
+    return Random(0, 1e9);
+}
 
 template <Policies Policy>
 struct CacheFixture : benchmark::Fixture {
     Cache<Policy> cache;
     std::vector <std::string> keys;
     void SetUp(const benchmark::State&) override {
-        keys.resize(kCacheSize);
-
-        for (auto i = 0; i < kCacheSize; ++i) {
+        cache.SetMaxMemory(10'000); // in bytes
+        keys.resize(kOperationsCount);
+        for (auto i = 0; i < kOperationsCount; ++i) {
             keys[i] = std::to_string(i);
+        }
+        for (auto i = 0; i < 2 * kCacheSize; ++i) {
+            cache.Put(keys[i], keys[i]);
         }
     }
 };
@@ -27,8 +42,8 @@ uint64_t GetPercentile(const std::vector<uint64_t>& v, double x) {
     return v[idx];
 }
 
-const int kOperationsCount = 1000;
-const int K = 1000;
+
+const int K = 100;
 
 
 template <Policies Policy, typename Workload>
@@ -37,7 +52,7 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
     std::vector <uint64_t> latencies(kOperationsCount);
     
     const auto evictions_before = cache.GetEvictionCount();
-
+    benchmark::DoNotOptimize(workload);
     for (auto _ : state) {
         for (int i = 0; i < kOperationsCount; ++i) {
 
@@ -76,7 +91,7 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
     cache.GetEvictionCount();
 
     state.counters["eviction_count"] = 
-    static_cast<double>(evictions_after - evictions_before);
+    static_cast<double>(evictions_after - evictions_before) / state.iterations() / K;
 
     state.counters["memory_bytes"] = 
     static_cast<double>(cache.EstimateMemoryBytes());

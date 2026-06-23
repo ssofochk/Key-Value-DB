@@ -5,7 +5,7 @@ class UniformWorkLoad {
 public:
     template <Policies Policy>
     void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
-        cache.Get(keys[rand() % keys.size()]);
+        cache.Get(keys[Random() % keys.size()]);
     }
 };
 

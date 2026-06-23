@@ -14,12 +14,12 @@ public:
 
         if (burst) {
             cache.Put(
-                keys[rand() % keys.size()],
+                keys[Random() % keys.size()],
                 std::to_string(value++)
             );
         } else {
             cache.Get(
-                keys[rand() % keys.size()]
+                keys[Random() % keys.size()]
             );
         }
 
