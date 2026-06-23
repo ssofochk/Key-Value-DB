@@ -3,18 +3,18 @@
 namespace db_handler {
 
 #define DB_HANDLER_MACRO \
-    Handler<ThreadCount, MutexCount, MaxKeySize, MaxValueSize, FileWorkerPath, Policy, IsMutexShared>
+    Handler<ThreadCount, MutexCount, MaxKeySize, MaxValueSize, Policy, IsMutexShared>
 
-template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath,
+template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize,
           Policies Policy, bool IsMutexShared>
-    requires PathStringType<FileWorkerPath> && (std::has_single_bit(MutexCount))
+    requires (std::has_single_bit(MutexCount))
 std::future<std::optional<std::string>> DB_HANDLER_MACRO::Get(const std::string& key) {
     auto promise_ptr = std::make_shared<std::promise<std::optional<std::string>>>();
 
     std::future<std::optional<std::string>> future_res = promise_ptr->get_future();
 
     thread_pool_.addTask(
-        [this, promise_ptr](const std::string& key) mutable {
+        [this, &promise_ptr](const std::string& key) mutable {
             using LockType =
                 std::conditional_t<IsMutexShared, std::shared_lock<std::shared_mutex>, std::lock_guard<std::mutex>>;
             size_t mtx_idx = GetMutexHash(key);
@@ -24,15 +24,22 @@ std::future<std::optional<std::string>> DB_HANDLER_MACRO::Get(const std::string&
                     LockType guard{fragments_mutexes[mtx_idx].mtx};
                     res_ptr = cache_module_.Get(key);
                     // found in cache
-                    promise_ptr->set_value(std::optional<std::string>(*res_ptr));
-                }
-
-                if (!res_ptr) {
-                    // find in file worker
-                    std::optional<std::string> file_res = io_worker_.read(key);
-                    promise_ptr->set_value(file_res);
+                    if (!res_ptr){
+                        promise_ptr->set_value(std::optional<std::string>(*res_ptr));
+                    }
                     return;
                 }
+
+                // find in file worker
+                std::optional<std::string> file_res = io_worker_.read(key);
+                promise_ptr->set_value(file_res);
+                
+                if (file_res.has_value()){
+                    LockType guard{fragments_mutexes[mtx_idx].mtx};
+                    cache_module_.Put(key, file_res);
+                }
+
+                return;
 
             } catch (...) {
                 promise_ptr->set_exception(std::current_exception());
@@ -43,9 +50,9 @@ std::future<std::optional<std::string>> DB_HANDLER_MACRO::Get(const std::string&
     return future_res;
 }
 
-template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath,
-          Policies Policy, bool IsMutexShared>
-    requires PathStringType<FileWorkerPath> && (std::has_single_bit(MutexCount))
+template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize,
+Policies Policy, bool IsMutexShared>
+    requires (std::has_single_bit(MutexCount))
 std::future<bool> DB_HANDLER_MACRO::Set(const std::string& key, const std::string& value) {
     auto promise_ptr = std::make_shared<std::promise<bool>>();
 
@@ -54,7 +61,7 @@ std::future<bool> DB_HANDLER_MACRO::Set(const std::string& key, const std::strin
     using LockType =
         std::conditional_t<IsMutexShared, std::unique_lock<std::shared_mutex>, std::lock_guard<std::mutex>>;
     thread_pool_.addTask(
-        [this, promise_ptr](const std::string& key, const std::string& value) mutable {
+        [this, &promise_ptr](const std::string& key, const std::string& value) mutable {
             size_t mtx_idx = GetMutexHash(key);
             try {
                 {
@@ -73,9 +80,9 @@ std::future<bool> DB_HANDLER_MACRO::Set(const std::string& key, const std::strin
     return future_res;
 }
 
-template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath,
+template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize,
           Policies Policy, bool IsMutexShared>
-    requires PathStringType<FileWorkerPath> && (std::has_single_bit(MutexCount))
+    requires (std::has_single_bit(MutexCount))
 size_t DB_HANDLER_MACRO::GetMutexHash(const std::string& key) {
     return hash_func_(key) & (MutexCount - 1);
 }
