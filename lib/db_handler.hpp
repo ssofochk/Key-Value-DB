@@ -11,21 +11,21 @@
 
 namespace db_handler {
 
-template <auto S>
-concept PathStringType = requires { std::filesystem::path(S); };
 
-template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath,
+template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize,
           Policies Policy, bool IsMutexShared = false>
-    requires PathStringType<FileWorkerPath> && (std::has_single_bit(MutexCount))
+    requires (std::has_single_bit(MutexCount))
 class Handler {
-   public:
+public:
+    Handler(std::filesystem::path path) : io_worker_(FileWorker<MaxKeySize, MaxValueSize>(path)) {}
+
     std::future<std::optional<std::string>> Get(const std::string& key);
 
     std::future<bool> Set(const std::string& key, const std::string& value);
 
-   private:
+private:
     ThreadPool thread_pool_ = ThreadPool(ThreadCount);
-    FileWorker<MaxKeySize, MaxValueSize> io_worker_{FileWorkerPath};
+    FileWorker<MaxKeySize, MaxValueSize> io_worker_;
     Cache<Policy> cache_module_ = Cache<Policy>();
 
     using ChosenMutex = std::conditional_t<IsMutexShared, std::shared_mutex, std::mutex>;
