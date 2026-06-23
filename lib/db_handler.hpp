@@ -1,3 +1,4 @@
+#include <bit>
 #include <future>
 #include <memory>
 #include <new>
@@ -13,9 +14,9 @@ namespace db_handler {
 template <auto S>
 concept PathStringType = requires { std::filesystem::path(S); };
 
-template <int ThreadCount, int MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath, Policies Policy,
-          bool IsMutexShared = false>
-    requires PathStringType<FileWorkerPath>
+template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath,
+          Policies Policy, bool IsMutexShared = false>
+    requires PathStringType<FileWorkerPath> && (std::has_single_bit(MutexCount))
 class Handler {
    public:
     std::future<std::optional<std::string>> Get(const std::string& key);

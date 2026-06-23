@@ -5,9 +5,9 @@ namespace db_handler {
 #define DB_HANDLER_MACRO \
     Handler<ThreadCount, MutexCount, MaxKeySize, MaxValueSize, FileWorkerPath, Policy, IsMutexShared>
 
-template <int ThreadCount, int MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath, Policies Policy,
-          bool IsMutexShared>
-    requires PathStringType<FileWorkerPath>
+template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath,
+          Policies Policy, bool IsMutexShared>
+    requires PathStringType<FileWorkerPath> && (std::has_single_bit(MutexCount))
 std::future<std::optional<std::string>> DB_HANDLER_MACRO::Get(const std::string& key) {
     auto promise_ptr = std::make_shared<std::promise<std::optional<std::string>>>();
 
@@ -43,9 +43,9 @@ std::future<std::optional<std::string>> DB_HANDLER_MACRO::Get(const std::string&
     return future_res;
 }
 
-template <int ThreadCount, int MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath, Policies Policy,
-          bool IsMutexShared>
-    requires PathStringType<FileWorkerPath>
+template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath,
+          Policies Policy, bool IsMutexShared>
+    requires PathStringType<FileWorkerPath> && (std::has_single_bit(MutexCount))
 std::future<bool> DB_HANDLER_MACRO::Set(const std::string& key, const std::string& value) {
     auto promise_ptr = std::make_shared<std::promise<bool>>();
 
@@ -73,9 +73,9 @@ std::future<bool> DB_HANDLER_MACRO::Set(const std::string& key, const std::strin
     return future_res;
 }
 
-template <int ThreadCount, int MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath, Policies Policy,
-          bool IsMutexShared>
-    requires PathStringType<FileWorkerPath>
+template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath,
+          Policies Policy, bool IsMutexShared>
+    requires PathStringType<FileWorkerPath> && (std::has_single_bit(MutexCount))
 size_t DB_HANDLER_MACRO::GetMutexHash(const std::string& key) {
     return hash_func_(key) & (MutexCount - 1);
 }
