@@ -1,28 +1,30 @@
-#include "cache.hpp"
-#include "thread_pool.hpp"
-#include "fileworker.hpp"
 #include <future>
 #include <memory>
-#include <type_traits>
 #include <new>
 #include <shared_mutex>
+#include <type_traits>
 
-namespace db_handler{
+#include "cache.hpp"
+#include "fileworker.hpp"
+#include "thread_pool.hpp"
 
-template<typename T>
-concept IsFilePath = std::is_same_v<std::decay_t<T>, std::filesystem::path>;
+namespace db_handler {
 
-template <int ThreadCount, int MutexCount, IsFilePath auto FileWorkerPath, Policies Policy, bool IsMutexShared = false>
-class Handler{
-public:
+template <auto S>
+concept PathStringType = requires { std::filesystem::path(S); };
 
+template <int ThreadCount, int MutexCount, size_t MaxKeySize, size_t MaxValueSize, auto FileWorkerPath, Policies Policy,
+          bool IsMutexShared = false>
+    requires PathStringType<FileWorkerPath>
+class Handler {
+   public:
     std::future<std::optional<std::string>> Get(const std::string& key);
 
     std::future<bool> Set(const std::string& key, const std::string& value);
 
-private:
+   private:
     ThreadPool thread_pool_ = ThreadPool(ThreadCount);
-    FileWorker io_worker_ = FileWorker(FileWorkerPath);
+    FileWorker<MaxKeySize, MaxValueSize> io_worker_{FileWorkerPath};
     Cache<Policy> cache_module_ = Cache<Policy>();
 
     using ChosenMutex = std::conditional_t<IsMutexShared, std::shared_mutex, std::mutex>;
@@ -35,11 +37,8 @@ private:
     std::hash<std::string> hash_func_;
 
     size_t GetMutexHash(const std::string& key);
-
 };
 
-}; // namespace db_handler
-
-
+}  // namespace db_handler
 
 #include "db_handler.tpp"
