@@ -57,18 +57,16 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
         for (int i = 0; i < kOperationsCount; ++i) {
 
             auto start = std::chrono::steady_clock::now();
-            int t = K;
-            while(t--) {
-                workload.template execute<Policy>(cache, keys);
-            }
+
+            workload.template execute<Policy>(cache, keys);
 
             auto end = std::chrono::steady_clock::now();
 
-            latencies[i] = static_cast<uint64_t>
-                (std::chrono::duration_cast
-                    <std::chrono::nanoseconds>
-                        (end - start).count()
-                ) / K;
+            latencies[i] = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    end - start
+                ).count()
+            );
         }
     }
 
@@ -98,7 +96,7 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
 
 
     state.SetItemsProcessed(
-        state.iterations() * kOperationsCount * K
+        state.iterations() * kOperationsCount
     );
 
 }
