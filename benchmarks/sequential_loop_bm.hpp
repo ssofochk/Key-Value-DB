@@ -6,7 +6,10 @@ private:
 public:
     template <Policies Policy>
     void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
-        cache.Get(keys[cur_idx % keys.size()]);
+        const std::string& key = keys[cur_idx % keys.size()];
+        if (cache.Get(key) == nullptr) {
+            cache.Put(key, key);
+        }
         ++cur_idx;
     }
 };
