@@ -3,8 +3,8 @@
 
 class WriteHeavyWorkLoad {
 private:
-    double read_percent = 0.05;
-    double write_percent = 0.95;
+    double read_percent = 0.2;
+    double write_percent = 0.8;
 public:
     template <Policies Policy>
     void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
