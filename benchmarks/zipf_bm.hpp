@@ -10,7 +10,10 @@ public:
     void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
         if (Random() % 100 > probability * 100) {
             int idx = Random() % static_cast<int>(keys.size() * (1 - main_segment));
-            cache.Get(keys[main_segment * keys.size() + idx]);
+            const std::string& key = keys[main_segment * keys.size() + idx];
+            if (cache.Get(key) == nullptr) {
+                cache.Put(key, key);
+            }
         } else {
             int idx = Random() % static_cast<int>(keys.size() * main_segment);
             cache.Get(keys[idx]);

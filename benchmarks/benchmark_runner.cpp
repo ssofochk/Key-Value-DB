@@ -57,18 +57,16 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
         for (int i = 0; i < kOperationsCount; ++i) {
 
             auto start = std::chrono::steady_clock::now();
-            int t = K;
-            while(t--) {
-                workload.template execute<Policy>(cache, keys);
-            }
+
+            workload.template execute<Policy>(cache, keys);
 
             auto end = std::chrono::steady_clock::now();
 
-            latencies[i] = static_cast<uint64_t>
-                (std::chrono::duration_cast
-                    <std::chrono::nanoseconds>
-                        (end - start).count()
-                ) / K;
+            latencies[i] = static_cast<uint64_t>(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    end - start
+                ).count()
+            );
         }
     }
 
@@ -82,23 +80,33 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
     const uint64_t total_gets = hits + misses;
 
     if (total_gets == 0) {
-        state.counters["hit_ratio_percent"] = 0.0;
+        state.counters["hit_ratio_%"] = 0.0;
     } else {
-        state.counters["hit_ratio_percent"] = 100 * static_cast<double>(hits) / static_cast<double>(total_gets);
+        state.counters["hit_ratio_%"] = 100 * 
+        static_cast<double>(hits) / static_cast<double>(total_gets);
     }
 
     const auto evictions_after =
     cache.GetEvictionCount();
 
-    state.counters["eviction_count"] = 
-    static_cast<double>(evictions_after - evictions_before) / state.iterations() / K;
+    const double total_operations = 
+    static_cast<double>(state.iterations() * kOperationsCount);
+
+    const double evictions = static_cast<double>(evictions_after - evictions_before);
+
+
+    if (total_operations == 0) {
+        state.counters["evict_per_1000_ops"] = 0.0;
+    } else {
+        state.counters["evict_per_1000_ops"] = evictions * 1000.0 / total_operations;
+    }
 
     state.counters["memory_bytes"] = 
     static_cast<double>(cache.EstimateMemoryBytes());
 
 
     state.SetItemsProcessed(
-        state.iterations() * kOperationsCount * K
+        state.iterations() * kOperationsCount
     );
 
 }
