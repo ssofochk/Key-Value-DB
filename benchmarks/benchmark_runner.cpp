@@ -1,11 +1,11 @@
 #include <benchmark/benchmark.h>
-#include "cache.hpp"
+#include "cache/cache.hpp"
 #include <string>
 #include <mutex>
 #include <chrono>
 #include <algorithm>
 #include <random>
-#include "db_handler.hpp"
+#include "db_handler/db_handler.hpp"
 #include <filesystem>
 
 const int kCacheSize = 100;
