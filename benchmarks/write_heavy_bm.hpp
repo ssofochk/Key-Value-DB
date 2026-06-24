@@ -7,11 +7,17 @@ private:
     double write_percent = 0.8;
 public:
     template <Policies Policy>
-    void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
+    uint64_t execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
         if (Random() % 100 < read_percent * 100) {
-            cache.Get(keys[Random() % keys.size()]);
+            auto start = std::chrono::steady_clock::now();
+            cache.Get(keys[Random() % keys.size()]).get();
+            auto end = std::chrono::steady_clock::now();
+            return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
         } else {
-            cache.Put(keys[Random() % keys.size()], "value");
+            auto start = std::chrono::steady_clock::now();
+            cache.Put(keys[Random() % keys.size()], "value").get();
+            auto end = std::chrono::steady_clock::now();
+            return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
         }
     }
 };

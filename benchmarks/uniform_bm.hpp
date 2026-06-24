@@ -4,11 +4,12 @@
 class UniformWorkLoad {
 public:
     template <Policies Policy>
-    void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
+    uint64_t execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
         const std::string& key = keys[Random() % keys.size()];
-        if (cache.Get(key) == nullptr) {
-            cache.Put(key, key);
-        }
+        auto start = std::chrono::steady_clock::now();
+        cache.Get(key).get();
+        auto end = std::chrono::steady_clock::now();
+        return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
     }
 };
 
