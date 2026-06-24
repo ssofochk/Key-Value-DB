@@ -10,12 +10,11 @@ public:
     void execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
         if (Random() % 100 > probability * 100) {
             int idx = Random() % static_cast<int>(keys.size() * (1 - main_segment));
-            const std::string& key = keys[main_segment * keys.size() + idx];
-            auto k = cache.Get(key);
-            k.get();
+            const std::string& key = keys[idx];
+            cache.Get(key).get();
         } else {
             int idx = Random() % static_cast<int>(keys.size() * main_segment);
-            cache.Get(keys[idx]);
+            cache.Get(keys[keys.size() - idx - 1]).get();
         }
     }
 };

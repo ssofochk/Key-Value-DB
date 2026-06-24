@@ -39,8 +39,7 @@ struct CacheFixture : benchmark::Fixture {
             keys[i] = std::to_string(i);
         }
         for (auto i = 0; i < 2 * kCacheSize; ++i) {
-            auto k = cache.Put(keys[i], keys[i]);
-            k.get();
+            cache.Put(keys[i], keys[i]).get();
         }
     }
 };
