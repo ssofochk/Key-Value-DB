@@ -7,14 +7,20 @@ private:
     double probability = 0.9;
 public:
     template <Policies Policy>
-    void execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
+    uint64_t execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
         if (Random() % 100 > probability * 100) {
             int idx = Random() % static_cast<int>(keys.size() * (1 - main_segment));
             const std::string& key = keys[idx];
+            auto start = std::chrono::steady_clock::now();
             cache.Get(key).get();
+            auto end = std::chrono::steady_clock::now();
+            return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
         } else {
             int idx = Random() % static_cast<int>(keys.size() * main_segment);
+            auto start = std::chrono::steady_clock::now();
             cache.Get(keys[keys.size() - idx - 1]).get();
+            auto end = std::chrono::steady_clock::now();
+            return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
         }
     }
 };

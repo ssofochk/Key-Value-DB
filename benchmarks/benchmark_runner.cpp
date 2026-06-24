@@ -25,7 +25,7 @@ int Random() {
 using namespace db_handler;
 
 template <Policies Policy>
-using DataBase = Handler<1, 1, 256, 1024, Policy>;
+using DataBase = Handler<4, 8, 256, 1024, Policy>;
 
 
 template <Policies Policy>
@@ -52,7 +52,7 @@ uint64_t GetPercentile(const std::vector<uint64_t>& v, double x) {
 
 
 const int K = 100;
-
+int extra_evics = 0;
 
 template <Policies Policy, typename Workload>
 void bm_impl(benchmark::State& state, DataBase<Policy>& cache, std::vector<std::string>& keys, Workload workload) {
@@ -63,18 +63,9 @@ void bm_impl(benchmark::State& state, DataBase<Policy>& cache, std::vector<std::
     benchmark::DoNotOptimize(workload);
     for (auto _ : state) {
         for (int i = 0; i < kOperationsCount; ++i) {
+            auto time = workload.template execute<Policy>(cache, keys);
 
-            auto start = std::chrono::steady_clock::now();
-
-            workload.template execute<Policy>(cache, keys);
-
-            auto end = std::chrono::steady_clock::now();
-
-            latencies[i] = static_cast<uint64_t>(
-                std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    end - start
-                ).count()
-            );
+            latencies[i] = time;
         }
     }
 
@@ -100,8 +91,8 @@ void bm_impl(benchmark::State& state, DataBase<Policy>& cache, std::vector<std::
     const double total_operations = 
     static_cast<double>(state.iterations() * kOperationsCount);
 
-    const double evictions = static_cast<double>(evictions_after - evictions_before);
-
+    const double evictions = static_cast<double>(evictions_after - evictions_before) - extra_evics;
+    extra_evics = 0;
 
     if (total_operations == 0) {
         state.counters["evict_per_1000_ops"] = 0.0;
@@ -126,6 +117,6 @@ void bm_impl(benchmark::State& state, DataBase<Policy>& cache, std::vector<std::
 #include "zipf_bm.hpp"
 #include "read_heavy_bm.hpp"
 #include "write_heavy_bm.hpp"
-#include "brust_bm.hpp"
+#include "burst_bm.hpp"
 
 BENCHMARK_MAIN();
