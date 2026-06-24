@@ -13,11 +13,12 @@ public:
         bool burst = (counter % 1000) < 200;
 
         if (burst) {
-            cache.Put(keys[Random() % keys.size()],
-                std::to_string(value++));
+            cache.Get(keys[Random() % keys.size()]).get();
+            cache.Get(keys[Random() % keys.size()]).get();
+            cache.Get(keys[Random() % keys.size()]).get();
+            cache.Get(keys[Random() % keys.size()]).get();
         } else {
-            auto k = cache.Get(keys[Random() % keys.size()]);
-            k.get();
+            cache.Get(keys[Random() % keys.size()]).get();
         }
 
         ++counter;
