@@ -14,33 +14,27 @@ std::future<std::optional<std::string>> DB_HANDLER_MACRO::Get(const std::string&
     std::future<std::optional<std::string>> future_res = promise_ptr->get_future();
 
     thread_pool_.addTask(
-        [this, &promise_ptr](const std::string& key) mutable {
+        [this, promise_ptr](const std::string& key) mutable {
             using LockType =
                 std::conditional_t<IsMutexShared, std::shared_lock<std::shared_mutex>, std::lock_guard<std::mutex>>;
             size_t mtx_idx = GetMutexHash(key);
             try {
-                std::string* res_ptr = nullptr;
                 {
                     LockType guard{fragments_mutexes[mtx_idx].mtx};
-                    res_ptr = cache_module_.Get(key);
-                    // found in cache
-                    if (!res_ptr){
+                    if (auto* res_ptr = cache_module_.Get(key)) {
                         promise_ptr->set_value(std::optional<std::string>(*res_ptr));
+                        return;
                     }
-                    return;
                 }
 
-                // find in file worker
-                std::optional<std::string> file_res = io_worker_.read(key);
-                promise_ptr->set_value(file_res);
-                
-                if (file_res.has_value()){
+                auto file_res = io_worker_.read(key);
+
+                if (file_res.has_value()) {
                     LockType guard{fragments_mutexes[mtx_idx].mtx};
-                    cache_module_.Put(key, file_res);
+                    cache_module_.Put(key, file_res.value());
                 }
 
-                return;
-
+                promise_ptr->set_value(file_res);
             } catch (...) {
                 promise_ptr->set_exception(std::current_exception());
             }
@@ -53,7 +47,7 @@ std::future<std::optional<std::string>> DB_HANDLER_MACRO::Get(const std::string&
 template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxValueSize,
 Policies Policy, bool IsMutexShared>
     requires (std::has_single_bit(MutexCount))
-std::future<bool> DB_HANDLER_MACRO::Set(const std::string& key, const std::string& value) {
+std::future<bool> DB_HANDLER_MACRO::Put(const std::string& key, const std::string& value) {
     auto promise_ptr = std::make_shared<std::promise<bool>>();
 
     std::future<bool> future_res = promise_ptr->get_future();
@@ -61,7 +55,7 @@ std::future<bool> DB_HANDLER_MACRO::Set(const std::string& key, const std::strin
     using LockType =
         std::conditional_t<IsMutexShared, std::unique_lock<std::shared_mutex>, std::lock_guard<std::mutex>>;
     thread_pool_.addTask(
-        [this, &promise_ptr](const std::string& key, const std::string& value) mutable {
+        [this, promise_ptr](const std::string& key, const std::string& value) mutable {
             size_t mtx_idx = GetMutexHash(key);
             try {
                 {

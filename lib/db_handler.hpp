@@ -17,11 +17,33 @@ template <size_t ThreadCount, size_t MutexCount, size_t MaxKeySize, size_t MaxVa
     requires (std::has_single_bit(MutexCount))
 class Handler {
 public:
+    Handler() : io_worker_(FileWorker<MaxKeySize, MaxValueSize>("data_base.txt")), thread_pool_(ThreadCount) {}
+
     Handler(std::filesystem::path path) : io_worker_(FileWorker<MaxKeySize, MaxValueSize>(path)) {}
 
     std::future<std::optional<std::string>> Get(const std::string& key);
 
-    std::future<bool> Set(const std::string& key, const std::string& value);
+    std::future<bool> Put(const std::string& key, const std::string& value);
+
+    void SetMaxMemory(std::size_t max_memory) {
+        cache_module_.SetMaxMemory(max_memory);
+    }
+
+    std::uint64_t GetEvictionCount() const {
+        return cache_module_.GetEvictionCount();
+    }
+
+    std::size_t EstimateMemoryBytes() const {
+        return cache_module_.EstimateMemoryBytes();
+    }
+
+    uint64_t GetHits() const {
+        return cache_module_.GetHits();
+    }
+
+    uint64_t GetMisses() const {
+        return cache_module_.GetMisses();
+    }
 
 private:
     ThreadPool thread_pool_ = ThreadPool(ThreadCount);

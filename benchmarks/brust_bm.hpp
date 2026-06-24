@@ -8,19 +8,16 @@ private:
 
 public:
     template <Policies Policy>
-    void execute(Cache<Policy>& cache,
+    void execute(DataBase<Policy>& cache,
                  const std::vector<std::string>& keys) {
         bool burst = (counter % 1000) < 200;
 
         if (burst) {
-            cache.Put(
-                keys[Random() % keys.size()],
-                std::to_string(value++)
-            );
+            cache.Put(keys[Random() % keys.size()],
+                std::to_string(value++));
         } else {
-            cache.Get(
-                keys[Random() % keys.size()]
-            );
+            auto k = cache.Get(keys[Random() % keys.size()]);
+            k.get();
         }
 
         ++counter;

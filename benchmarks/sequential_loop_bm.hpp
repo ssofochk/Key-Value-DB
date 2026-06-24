@@ -5,11 +5,11 @@ private:
     size_t cur_idx = 0;
 public:
     template <Policies Policy>
-    void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
+    void execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
         const std::string& key = keys[cur_idx % keys.size()];
-        if (cache.Get(key) == nullptr) {
-            cache.Put(key, key);
-        }
+        auto k = cache.Get(key);
+        auto res = k.get();
+
         ++cur_idx;
     }
 };

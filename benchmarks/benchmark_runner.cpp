@@ -5,6 +5,8 @@
 #include <chrono>
 #include <algorithm>
 #include <random>
+#include "db_handler.hpp"
+#include <filesystem>
 
 const int kCacheSize = 100;
 const int kOperationsCount = 1000;
@@ -20,9 +22,15 @@ int Random() {
     return Random(0, 1e9);
 }
 
+using namespace db_handler;
+
+template <Policies Policy>
+using DataBase = Handler<1, 1, 256, 1024, Policy>;
+
+
 template <Policies Policy>
 struct CacheFixture : benchmark::Fixture {
-    Cache<Policy> cache;
+    DataBase<Policy> cache;
     std::vector <std::string> keys;
     void SetUp(const benchmark::State&) override {
         cache.SetMaxMemory(10'000); // in bytes
@@ -31,7 +39,8 @@ struct CacheFixture : benchmark::Fixture {
             keys[i] = std::to_string(i);
         }
         for (auto i = 0; i < 2 * kCacheSize; ++i) {
-            cache.Put(keys[i], keys[i]);
+            auto k = cache.Put(keys[i], keys[i]);
+            k.get();
         }
     }
 };
@@ -47,7 +56,7 @@ const int K = 100;
 
 
 template <Policies Policy, typename Workload>
-void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::string>& keys, Workload workload) {
+void bm_impl(benchmark::State& state, DataBase<Policy>& cache, std::vector<std::string>& keys, Workload workload) {
     
     std::vector <uint64_t> latencies(kOperationsCount);
     
@@ -108,7 +117,6 @@ void bm_impl(benchmark::State& state, Cache<Policy>& cache, std::vector<std::str
     state.SetItemsProcessed(
         state.iterations() * kOperationsCount
     );
-
 }
 
 

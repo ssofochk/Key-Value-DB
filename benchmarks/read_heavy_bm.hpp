@@ -7,9 +7,10 @@ private:
     double write_percent = 0.05;
 public:
     template <Policies Policy>
-    void execute(Cache<Policy>& cache, const std::vector<std::string>& keys) {
+    void execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
         if (Random() % 100 < read_percent * 100) {
-            cache.Get(keys[Random() % keys.size()]);
+            auto k = cache.Get(keys[Random() % keys.size()]);
+            k.get();
         } else {
             cache.Put(keys[Random() % keys.size()], "value");
         }
