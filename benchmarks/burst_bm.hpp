@@ -3,34 +3,38 @@
 
 class BurstWorkLoad {
 private:
+    double main_segment = 0.2;
+    double probability = 0.9;
+    double start_point = 0;
     size_t counter = 0;
-    int value = 0;
-
 public:
     template <Policies Policy>
-    uint64_t execute(DataBase<Policy>& cache,
-                 const std::vector<std::string>& keys) {
-        bool burst = (counter % 1000) < 200;
-        uint64_t res;
-        if (burst) {
-            auto start = std::chrono::steady_clock::now();
-            cache.Get(keys[Random() % keys.size()]).get();
-            cache.Get(keys[Random() % keys.size()]).get();
-            cache.Get(keys[Random() % keys.size()]).get();
-            cache.Get(keys[Random() % keys.size()]).get();
-            if (Policy != Policies::NOEVICTION) extra_evics += 3;
-            auto end = std::chrono::steady_clock::now();
+    uint64_t execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
+        int res = 0;
+        if (Random() % 100 > probability * 100) {
+            int idx = Random() % static_cast<int>(keys.size() * (1 - main_segment));
+            const std::string& key = keys[idx];
 
-            res = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count()) / 4;
-
-        } else {
             auto start = std::chrono::steady_clock::now();
-            cache.Get(keys[Random() % keys.size()]).get();
+
+            cache.Get(key).get();
+
             auto end = std::chrono::steady_clock::now();
 
             res = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
+        } else {
+            int idx = Random() % static_cast<int>(keys.size() * main_segment);
+            auto start = std::chrono::steady_clock::now();
+            cache.Get(keys[start_point + idx]).get();
+            auto end = std::chrono::steady_clock::now();
+            res = static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
         }
+
+
         ++counter;
+        if (counter % (kOperationsCount / 3) == 0) {
+            start_point = Random() % static_cast<int>((1 - main_segment) * keys.size() - 1);
+        }
         return res;
     }
 };
