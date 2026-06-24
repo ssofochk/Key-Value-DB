@@ -19,7 +19,7 @@ class Handler {
 public:
     Handler() : io_worker_(FileWorker<MaxKeySize, MaxValueSize>("data_base.txt")), thread_pool_(ThreadCount) {}
 
-    Handler(std::filesystem::path path) : io_worker_(FileWorker<MaxKeySize, MaxValueSize>(path)) {}
+    Handler(std::filesystem::path path) : io_worker_(FileWorker<MaxKeySize, MaxValueSize>(path)), thread_pool_(ThreadCount) {}
 
     std::future<std::optional<std::string>> Get(const std::string& key);
 
@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    ThreadPool thread_pool_ = ThreadPool(ThreadCount);
+    ThreadPool thread_pool_;
     FileWorker<MaxKeySize, MaxValueSize> io_worker_;
     Cache<Policy> cache_module_ = Cache<Policy>();
 
