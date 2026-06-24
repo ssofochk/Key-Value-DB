@@ -14,6 +14,7 @@ enable_testing()
 add_executable(
     app-tests
     cache_tests.cpp
+    ${PROJECT_SOURCE_DIR}/lib/thread_pool/thread_pool.cpp
 )
 
 target_include_directories(
