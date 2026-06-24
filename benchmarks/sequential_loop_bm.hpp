@@ -7,8 +7,7 @@ public:
     template <Policies Policy>
     void execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
         const std::string& key = keys[cur_idx % keys.size()];
-        auto k = cache.Get(key);
-        auto res = k.get();
+        cache.Get(key).get();
 
         ++cur_idx;
     }

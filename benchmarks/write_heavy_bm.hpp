@@ -9,10 +9,9 @@ public:
     template <Policies Policy>
     void execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
         if (Random() % 100 < read_percent * 100) {
-            auto k = cache.Get(keys[Random() % keys.size()]);
-            k.get();
+            cache.Get(keys[Random() % keys.size()]).get();
         } else {
-            cache.Put(keys[Random() % keys.size()], "value");
+            cache.Put(keys[Random() % keys.size()], "value").get();
         }
     }
 };

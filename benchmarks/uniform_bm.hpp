@@ -6,9 +6,7 @@ public:
     template <Policies Policy>
     void execute(DataBase<Policy>& cache, const std::vector<std::string>& keys) {
         const std::string& key = keys[Random() % keys.size()];
-        auto k = cache.Get(key);
-        k.get();
-
+        cache.Get(key).get();
     }
 };
 
