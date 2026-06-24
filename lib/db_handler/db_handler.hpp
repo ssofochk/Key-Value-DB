@@ -5,9 +5,9 @@
 #include <shared_mutex>
 #include <type_traits>
 
-#include "cache.hpp"
-#include "fileworker.hpp"
-#include "thread_pool.hpp"
+#include "cache/cache.hpp"
+#include "fileworker/fileworker.hpp"
+#include "thread_pool/thread_pool.hpp"
 
 namespace db_handler {
 

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "cache.hpp"
+#include "cache/cache.hpp"
 
 TEST(StringTest, SetGet) {
     Cache<Policies::NOEVICTION> cache;
